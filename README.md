@@ -36,16 +36,3 @@ Applicazione desktop in **Java** per la creazione e gestione di playlist musical
 - Tag visivi (favourite, explicit, new release)
 
 
-
----
-
-## 🔗 Link utili
-
-- **Trello board:** *(da inserire)*
-- **Product backlog:** *(da inserire)*
-
----
-
-## 📄 Licenza
-
-Progetto accademico – Università degli Studi di Salerno.
