@@ -1,0 +1,15 @@
+# Maven build
+target/
+
+# File compilati Java
+*.class
+
+# IDE - VS Code
+.vscode/
+
+
+# macOS
+.DS_Store
+
+# Log
+*.log
