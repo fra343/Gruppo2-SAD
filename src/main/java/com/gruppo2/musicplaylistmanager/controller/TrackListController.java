@@ -14,37 +14,47 @@ import javafx.scene.layout.GridPane;
 import java.io.IOException;
 import java.util.Optional;
 
-
-//Controller che gestisce le operazioni sulle tracce: aggiunta, rimozione, modifica.
-//Riceve il riferimento alla TableView da MainController tramite setTrackTableView.
-
+/**
+ * Controller che gestisce le operazioni sulle tracce: aggiunta, eliminazione
+ * e modifica. Riceve il riferimento alla {@link TableView} e al
+ * {@link LibraryService} da {@link MainController} tramite i rispettivi setter.
+ */
 public class TrackListController {
 
     private LibraryService libraryService;
-
-    // Riferimento alla TableView della libreria, iniettato da MainController.
     private TableView<Track> trackTableView;
 
+    /**
+     * Inietta il servizio della libreria.
+     *
+     * @param libraryService servizio condiviso con gli altri controller
+     */
     public void setLibraryService(LibraryService libraryService) {
         this.libraryService = libraryService;
     }
 
-    //Imposta la TableView su cui operare per la selezione delle tracce.
+    /**
+     * Inietta la TableView su cui operare per leggere la selezione corrente.
+     *
+     * @param trackTableView tabella delle tracce della libreria
+     */
     public void setTrackTableView(TableView<Track> trackTableView) {
         this.trackTableView = trackTableView;
     }
 
-    
-    //Apre il form e, alla conferma, crea e aggiunge una nuova traccia.
-    //Se i dati non sono validi mostra un errore e la libreria resta invariata.
-
+    /**
+     * Apre il form di inserimento e, alla conferma, crea e aggiunge una nuova
+     * traccia alla libreria tramite {@link LibraryService#addTrack}.
+     * Se i dati non superano la validazione mostra un alert di errore e la
+     * libreria resta invariata.
+     */
     @FXML
     public void onAddTrack() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gruppo2/musicplaylistmanager/view/TrackForm.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/com/gruppo2/musicplaylistmanager/view/TrackForm.fxml"));
             GridPane form = loader.load();
 
-            // I campi del form si recuperano tramite il loro fx:id
             TextField titleField    = (TextField) loader.getNamespace().get("titleField");
             TextField authorField   = (TextField) loader.getNamespace().get("authorField");
             TextField durationField = (TextField) loader.getNamespace().get("durationField");
@@ -78,13 +88,19 @@ public class TrackListController {
         }
     }
 
+    /**
+     * Elimina la traccia attualmente selezionata dalla libreria.
+     */
     @FXML
     public void onDeleteTrack() {
     }
 
-    //Modifica traccia: apre il form pre-compilato con i dati della traccia selezionata.
-    //Alla conferma aggiorna i campi tramite LibraryService.updateTrack.
-
+    /**
+     * Apre il form di modifica pre-compilato con i dati della traccia selezionata.
+     * Alla conferma aggiorna i campi tramite {@link LibraryService#updateTrack}.
+     * Il metodo chiama {@link TableView#refresh()} perché la TableView non rileva
+     * automaticamente le modifiche ai campi interni degli oggetti già presenti.
+     */
     @FXML
     public void onEditTrack() {
         Track selected = trackTableView.getSelectionModel().getSelectedItem();
@@ -93,7 +109,8 @@ public class TrackListController {
             return;
         }
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gruppo2/musicplaylistmanager/view/TrackForm.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/com/gruppo2/musicplaylistmanager/view/TrackForm.fxml"));
             GridPane form = loader.load();
 
             TextField titleField    = (TextField) loader.getNamespace().get("titleField");
@@ -102,7 +119,6 @@ public class TrackListController {
             TextField genreField    = (TextField) loader.getNamespace().get("genreField");
             TextField yearField     = (TextField) loader.getNamespace().get("yearField");
 
-            // Pre-popola i campi con i dati attuali della traccia
             titleField.setText(selected.getTitle());
             authorField.setText(selected.getAuthor());
             durationField.setText(String.valueOf(selected.getDuration()));
@@ -125,8 +141,6 @@ public class TrackListController {
                         duration,
                         genreField.getText().trim(),
                         year);
-                // La TableView non rileva automaticamente le modifiche ai campi interni:
-                // refresh() forza il ridisegno di tutte le righe visibili.
                 trackTableView.refresh();
             }
         } catch (NumberFormatException e) {

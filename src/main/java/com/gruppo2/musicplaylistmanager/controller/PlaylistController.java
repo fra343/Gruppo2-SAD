@@ -16,25 +16,35 @@ import javafx.scene.layout.VBox;
 
 import java.util.Optional;
 
-
- //Controller per creazione ed eliminazione playlist .
- //Visualizza le playlist come blocchi.
-
+/**
+ * Controller per la creazione ed eliminazione delle playlist.
+ * Visualizza le playlist come card cliccabili nel pannello destro e mantiene
+ * il riferimento alla playlist attualmente selezionata.
+ */
 public class PlaylistController {
 
     private PlaylistService playlistService;
     private FlowPane playlistFlowPane;
 
-    //Playlist attualmente selezionata 
+    /** Playlist attualmente selezionata tramite click su una card, o {@code null}. */
     private Playlist selectedPlaylist = null;
 
+    /**
+     * Inietta il servizio delle playlist.
+     *
+     * @param playlistService servizio condiviso con gli altri controller
+     */
     public void setPlaylistService(PlaylistService playlistService) {
         this.playlistService = playlistService;
     }
 
-    //Collega il FlowPane al controller e registra un listener sull'ObservableList:
-    //ogni aggiunta/rimozione di playlist aggiorna automaticamente le card.
-
+    /**
+     * Collega il {@link FlowPane} al controller e registra un listener
+     * sull'ObservableList delle playlist: ogni aggiunta o rimozione di playlist
+     * ricostruisce automaticamente le card nel pannello.
+     *
+     * @param playlistFlowPane pannello in cui vengono visualizzate le card
+     */
     public void setPlaylistFlowPane(FlowPane playlistFlowPane) {
         this.playlistFlowPane = playlistFlowPane;
         playlistService.getAllPlaylists().addListener((ListChangeListener<Playlist>) change -> {
@@ -42,7 +52,20 @@ public class PlaylistController {
         });
     }
 
-    //Creazione playlist: con finestra per inserire il nome, poi delega a PlaylistService.
+    /**
+     * Restituisce la playlist attualmente selezionata tramite click su una card.
+     *
+     * @return playlist selezionata, o {@code null} se nessuna è selezionata
+     */
+    public Playlist getSelectedPlaylist() {
+        return selectedPlaylist;
+    }
+
+    /**
+     * Apre un dialog per inserire il nome e crea una nuova playlist tramite
+     * {@link PlaylistService#createPlaylist}. In caso di errore mostra un alert.
+     * La lista delle card si aggiorna automaticamente tramite il listener.
+     */
     @FXML
     public void onCreatePlaylist() {
         TextField nameField = new TextField();
@@ -61,14 +84,17 @@ public class PlaylistController {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
                 playlistService.createPlaylist(nameField.getText());
-                // Il listener sull'ObservableList aggiorna le card automaticamente
             } catch (IllegalArgumentException ex) {
                 showError(ex.getMessage());
             }
         }
     }
 
-    // Elimina playlist: rimuove la card selezionata.
+    /**
+     * Elimina la playlist attualmente selezionata tramite
+     * {@link PlaylistService#deletePlaylist}. Mostra un errore se nessuna
+     * playlist è selezionata. La lista delle card si aggiorna automaticamente.
+     */
     @FXML
     public void onDeletePlaylist() {
         if (selectedPlaylist == null) {
@@ -77,10 +103,13 @@ public class PlaylistController {
         }
         playlistService.deletePlaylist(selectedPlaylist);
         selectedPlaylist = null;
-        // Il listener aggiorna le card automaticamente
     }
 
-    //Ricostruisce tutte le card visive nel pannello delle playlist
+    /**
+     * Ricostruisce tutte le card nel pannello partendo dalla lista corrente
+     * delle playlist. Viene invocato automaticamente dal listener ogni volta
+     * che la lista cambia.
+     */
     private void rebuildCards() {
         playlistFlowPane.getChildren().clear();
         selectedPlaylist = null;
@@ -89,7 +118,13 @@ public class PlaylistController {
         }
     }
 
-    // Crea una card visiva per la playlist: blocco grigio arrotondato con il nome.
+    /**
+     * Crea la card visiva per una singola playlist: blocco grigio arrotondato
+     * con il nome. Il click sulla card la seleziona evidenziandola.
+     *
+     * @param playlist playlist da rappresentare
+     * @return nodo JavaFX che rappresenta la card
+     */
     private Node createCard(Playlist playlist) {
         Label nameLabel = new Label(playlist.getName());
         nameLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #333333; -fx-wrap-text: true;");
@@ -101,7 +136,6 @@ public class PlaylistController {
         card.setAlignment(Pos.BOTTOM_LEFT);
         card.setStyle(styleCard(false));
 
-        // Click: seleziona questa card e deseleziona le altre
         card.setOnMouseClicked(e -> {
             resetAllCards();
             card.setStyle(styleCard(true));
@@ -111,7 +145,7 @@ public class PlaylistController {
         return card;
     }
 
-    //Rimuove la selezione visiva da tutte le card.
+    /** Rimuove la selezione visiva da tutte le card. */
     private void resetAllCards() {
         for (Node node : playlistFlowPane.getChildren()) {
             node.setStyle(styleCard(false));

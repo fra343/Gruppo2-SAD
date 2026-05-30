@@ -5,22 +5,33 @@ import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.util.ValidationUtils;
 import javafx.collections.ObservableList;
 
-
-//Servizio che gestisce la libreria delle tracce.
-//Fa da intermediario tra i controller e il Model.
-
+/**
+ * Servizio che gestisce la libreria delle tracce musicali.
+ * Fa da intermediario tra i controller e il Model: i controller non accedono
+ * mai direttamente a {@link Library}, ma delegano a questo servizio.
+ */
 public class LibraryService {
 
     private final Library library;
 
+    /**
+     * Crea il servizio legandolo alla libreria indicata.
+     *
+     * @param library istanza condivisa della libreria
+     */
     public LibraryService(Library library) {
         this.library = library;
     }
 
-
-    //Valida i dati di una traccia e, se corretti, la aggiunge alla libreria.
-    //Se un valore non è valido lancia IllegalArgumentException.
-
+    /**
+     * Valida i dati della traccia e, se corretti, la aggiunge alla libreria.
+     * La validazione è atomica: se anche un solo campo non è valido la libreria
+     * resta invariata e viene lanciata un'eccezione.
+     *
+     * @param track traccia da aggiungere
+     * @throws IllegalArgumentException se titolo, autore o genere sono vuoti,
+     *                                  la durata è <= 0, o l'anno è fuori range
+     */
     public void addTrack(Track track) {
         ValidationUtils.requireNonEmpty(track.getTitle(), "Titolo");
         ValidationUtils.requireNonEmpty(track.getAuthor(), "Autore");
@@ -30,18 +41,26 @@ public class LibraryService {
         library.addTrack(track);
     }
 
-
-    //Valida i nuovi dati e aggiorna i campi della traccia.
-    //Tutta la validazione avviene prima di toccare i campi: se un valore non è valido
-    //la traccia resta invariata.
-
-    public void updateTrack(Track track, String title, String author, int duration, String genre, int year) {
+    /**
+     * Valida i nuovi valori e aggiorna i campi della traccia.
+     * Tutta la validazione avviene prima di toccare i campi: se un valore
+     * non è valido la traccia resta invariata.
+     *
+     * @param track    traccia da aggiornare
+     * @param title    nuovo titolo
+     * @param author   nuovo autore
+     * @param duration nuova durata in secondi
+     * @param genre    nuovo genere
+     * @param year     nuovo anno
+     * @throws IllegalArgumentException se uno dei valori non supera la validazione
+     */
+    public void updateTrack(Track track, String title, String author,
+                            int duration, String genre, int year) {
         ValidationUtils.requireNonEmpty(title, "Titolo");
         ValidationUtils.requireNonEmpty(author, "Autore");
         ValidationUtils.requireNonEmpty(genre, "Genere");
         ValidationUtils.requireValidDuration(duration);
         ValidationUtils.requireValidYear(year);
-        // Solo se tutti i controlli passano si modificano i campi
         track.setTitle(title);
         track.setAuthor(author);
         track.setDuration(duration);
@@ -49,6 +68,13 @@ public class LibraryService {
         track.setYear(year);
     }
 
+    /**
+     * Restituisce la lista osservabile di tutte le tracce della libreria.
+     * La TableView della UI è direttamente agganciata a questa lista e si
+     * aggiorna automaticamente a ogni modifica.
+     *
+     * @return lista osservabile delle tracce
+     */
     public ObservableList<Track> getAllTracks() {
         return library.getTracks();
     }
