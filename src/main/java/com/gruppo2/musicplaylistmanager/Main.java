@@ -14,7 +14,7 @@ public class Main extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gruppo2/musicplaylistmanager/view/Main.fxml"));
         Parent root = loader.load();
         primaryStage.setTitle("Music Playlist Manager");
-        primaryStage.setScene(new Scene(root, 600, 400));
+        primaryStage.setScene(new Scene(root, 1000, 680));
         primaryStage.show();
     }
 

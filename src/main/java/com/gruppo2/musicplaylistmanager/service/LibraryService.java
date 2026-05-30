@@ -5,10 +5,10 @@ import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.util.ValidationUtils;
 import javafx.collections.ObservableList;
 
-/**
- * Servizio che gestisce la libreria delle tracce.
- * Fa da intermediario tra i controller e il Model.
- */
+
+//Servizio che gestisce la libreria delle tracce.
+//Fa da intermediario tra i controller e il Model.
+
 public class LibraryService {
 
     private final Library library;
@@ -17,10 +17,10 @@ public class LibraryService {
         this.library = library;
     }
 
-    /**
-     * Valida i dati di una traccia e, se corretti, la aggiunge alla libreria.
-     * Se un valore non è valido lancia IllegalArgumentException.
-     */
+
+    //Valida i dati di una traccia e, se corretti, la aggiunge alla libreria.
+    //Se un valore non è valido lancia IllegalArgumentException.
+
     public void addTrack(Track track) {
         ValidationUtils.requireNonEmpty(track.getTitle(), "Titolo");
         ValidationUtils.requireNonEmpty(track.getAuthor(), "Autore");
@@ -31,12 +31,25 @@ public class LibraryService {
     }
 
 
-    public void removeTrack(Track track) {
-        
+    //Valida i nuovi dati e aggiorna i campi della traccia.
+    //Tutta la validazione avviene prima di toccare i campi: se un valore non è valido
+    //la traccia resta invariata.
+
+    public void updateTrack(Track track, String title, String author, int duration, String genre, int year) {
+        ValidationUtils.requireNonEmpty(title, "Titolo");
+        ValidationUtils.requireNonEmpty(author, "Autore");
+        ValidationUtils.requireNonEmpty(genre, "Genere");
+        ValidationUtils.requireValidDuration(duration);
+        ValidationUtils.requireValidYear(year);
+        // Solo se tutti i controlli passano si modificano i campi
+        track.setTitle(title);
+        track.setAuthor(author);
+        track.setDuration(duration);
+        track.setGenre(genre);
+        track.setYear(year);
     }
 
     public ObservableList<Track> getAllTracks() {
-        
         return library.getTracks();
     }
 }

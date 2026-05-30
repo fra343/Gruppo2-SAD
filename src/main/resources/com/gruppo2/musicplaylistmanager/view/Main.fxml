@@ -1,24 +1,148 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.geometry.Insets?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.gruppo2.musicplaylistmanager.controller.MainController">
-    <top>
-        <VBox spacing="10">
-            <padding>
-                <Insets top="15" right="15" bottom="15" left="15"/>
-            </padding>
-            <Label text="Music Playlist Manager"/>
-            <Button text="Aggiungi traccia" onAction="#onAddTrackButton"/>
-        </VBox>
-    </top>
+            fx:controller="com.gruppo2.musicplaylistmanager.controller.MainController"
+            style="-fx-background-color: #F5F5F5;">
+
+    <!-- ===== CONTENUTO PRINCIPALE ===== -->
     <center>
-        <!-- Per mostrare la lista delle tracce  -->
-        <Label text="La libreria verrà mostrata qui."/>
+        <HBox>
+
+            <!-- == PANNELLO SINISTRO: Libreria == -->
+            <VBox prefWidth="500"
+                  style="-fx-background-color: white; -fx-border-color: #E0E0E0; -fx-border-width: 0 1 0 0;"
+                  spacing="12">
+                <padding>
+                    <Insets top="20" right="16" bottom="16" left="20"/>
+                </padding>
+
+                <Label text="Library"
+                       style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1C1C1C;"/>
+
+                <!-- Pulsante aggiungi traccia -->
+                <HBox alignment="CENTER_LEFT">
+                    <Button text="+ Aggiungi traccia"
+                            onAction="#onAddTrackButton"
+                            style="-fx-background-color: #E8E8E8; -fx-text-fill: #1C1C1C; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 6 16 6 16;"/>
+                </HBox>
+
+                <!-- Pulsanti Modifica / Elimina -->
+                <HBox spacing="8">
+                    <Button text="Modifica"
+                            onAction="#onEditTrackButton"
+                            style="-fx-background-color: #E8E8E8; -fx-text-fill: #1C1C1C; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 6 16 6 16;"/>
+                    <Button text="Elimina"
+                            onAction="#onDeleteTrackButton"
+                            style="-fx-background-color: #E8E8E8; -fx-text-fill: #1C1C1C; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 6 16 6 16;"/>
+                </HBox>
+
+                <!-- Tabella tracce -->
+                <TableView fx:id="trackTableView"
+                           VBox.vgrow="ALWAYS"
+                           style="-fx-background-color: transparent; -fx-border-color: #EEEEEE;">
+                    <placeholder>
+                        <Label text="Nessuna traccia. Clicca + per iniziare."
+                               style="-fx-text-fill: #BBBBBB; -fx-font-style: italic;"/>
+                    </placeholder>
+                    <columns>
+                        <TableColumn fx:id="titleColumn"    text="Titolo"   prefWidth="165"/>
+                        <TableColumn fx:id="authorColumn"   text="Autore"   prefWidth="100"/>
+                        <TableColumn fx:id="genreColumn"    text="Genere"   prefWidth="85"/>
+                        <TableColumn fx:id="yearColumn"     text="Anno"     prefWidth="50"/>
+                        <TableColumn fx:id="durationColumn" text="Durata"   prefWidth="60"/>
+                    </columns>
+                </TableView>
+            </VBox>
+
+            <!-- == PANNELLO DESTRO: Playlist (US5 - Francesco Apicella) == -->
+            <VBox HBox.hgrow="ALWAYS"
+                  style="-fx-background-color: #F5F5F5;"
+                  spacing="12">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+
+                <Label text="Playlist"
+                       style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1C1C1C;"/>
+
+                <!-- Pulsanti Crea / Elimina playlist -->
+                <HBox spacing="8">
+                    <Button text="+ Crea playlist"
+                            onAction="#onCreatePlaylistButton"
+                            style="-fx-background-color: #E8E8E8; -fx-text-fill: #1C1C1C; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 6 16 6 16;"/>
+                    <Button text="Elimina playlist"
+                            onAction="#onDeletePlaylistButton"
+                            style="-fx-background-color: #E8E8E8; -fx-text-fill: #1C1C1C; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 6 16 6 16;"/>
+                </HBox>
+
+                <!-- Griglia di blocchi playlist, scorribile -->
+                <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true"
+                            style="-fx-background-color: transparent; -fx-border-color: transparent;">
+                    <FlowPane fx:id="playlistFlowPane"
+                              hgap="14" vgap="14"
+                              style="-fx-background-color: transparent; -fx-padding: 4;"/>
+                </ScrollPane>
+            </VBox>
+
+        </HBox>
     </center>
+
+    <!-- ===== PLAYER IN BASSO (placeholder — verrà implementato in sprint futuri) ===== -->
+    <bottom>
+        <VBox style="-fx-background-color: #EBEBEB; -fx-border-color: #D5D5D5; -fx-border-width: 1 0 0 0;"
+              spacing="6">
+            <padding>
+                <Insets top="10" right="24" bottom="10" left="24"/>
+            </padding>
+
+            <HBox alignment="CENTER_LEFT">
+                <!-- Info brano corrente -->
+                <VBox prefWidth="220" spacing="2">
+                    <Label text="Nessun brano in riproduzione"
+                           style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1C1C1C;"/>
+                    <Label text="—"
+                           style="-fx-font-size: 11px; -fx-text-fill: #888888;"/>
+                </VBox>
+
+                <!-- Pulsanti playback (centrati) -->
+                <HBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="14">
+                    <Button text="⏮"
+                            style="-fx-background-color: transparent; -fx-font-size: 16px; -fx-cursor: hand; -fx-text-fill: #555;"/>
+                    <Button text="▶"
+                            style="-fx-background-color: #2C2C2C; -fx-text-fill: white; -fx-background-radius: 50; -fx-min-width: 38; -fx-min-height: 38; -fx-font-size: 13px; -fx-cursor: hand;"/>
+                    <Button text="⏭"
+                            style="-fx-background-color: transparent; -fx-font-size: 16px; -fx-cursor: hand; -fx-text-fill: #555;"/>
+                </HBox>
+
+                <!-- Shuffle / Repeat (destra) -->
+                <HBox prefWidth="220" alignment="CENTER_RIGHT" spacing="14">
+                    <Button text="⇄"
+                            style="-fx-background-color: transparent; -fx-font-size: 18px; -fx-cursor: hand; -fx-text-fill: #777;"/>
+                    <Button text="↺"
+                            style="-fx-background-color: transparent; -fx-font-size: 18px; -fx-cursor: hand; -fx-text-fill: #777;"/>
+                </HBox>
+            </HBox>
+
+            <!-- Barra di avanzamento -->
+            <HBox alignment="CENTER" spacing="10">
+                <Label text="0:00" style="-fx-font-size: 11px; -fx-text-fill: #888888;"/>
+                <Slider HBox.hgrow="ALWAYS" min="0" max="100" value="0"/>
+                <Label text="0:00" style="-fx-font-size: 11px; -fx-text-fill: #888888;"/>
+            </HBox>
+        </VBox>
+    </bottom>
+
 </BorderPane>

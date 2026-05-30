@@ -54,6 +54,13 @@ public class Track {
         return tags;
     }
 
+    // Setter: usati da LibraryService.updateTrack per modificare i campi della traccia
+    public void setTitle(String title)      { this.title = title; }
+    public void setAuthor(String author)    { this.author = author; }
+    public void setDuration(int duration)   { this.duration = duration; }
+    public void setGenre(String genre)      { this.genre = genre; }
+    public void setYear(int year)           { this.year = year; }
+
     // due tracce con gli stessi dati ma create separatamente non sono uguali
     @Override
     public boolean equals(Object o) {
