@@ -1,5 +1,6 @@
 package com.gruppo2.musicplaylistmanager.service;
 
+import com.gruppo2.musicplaylistmanager.model.Library;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,7 @@ class PlaylistServiceTest {
 
     @BeforeEach
     void setUp() {
-        playlistService = new PlaylistService();
+        playlistService = new PlaylistService(new Library());
     }
 
     // CreatePlaylist 

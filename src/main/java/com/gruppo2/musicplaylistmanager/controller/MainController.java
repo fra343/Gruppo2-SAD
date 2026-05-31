@@ -10,9 +10,9 @@ import javafx.scene.layout.FlowPane;
 
 /**
  * Controller principale dell'applicazione.
- * Inizializza i servizi condivisi ({@link LibraryService}, {@link PlaylistService})
- * e coordina {@link TrackListController} e {@link PlaylistController},
- * delegando a ciascuno gli eventi dell'interfaccia di propria competenza.
+ * Crea l'unica istanza di {@link Library} condivisa tra tutti i servizi,
+ * istanzia {@link LibraryService} e {@link PlaylistService} passandola ad entrambi,
+ * e coordina {@link TrackListController} e {@link PlaylistController}.
  */
 public class MainController {
 
@@ -24,18 +24,18 @@ public class MainController {
 
     /**
      * Invocato da FXMLLoader al caricamento della vista.
-     * Crea la {@link Library} condivisa, istanzia i servizi e li passa ai
-     * controller figli assieme ai componenti grafici di loro competenza.
+     * Crea la {@link Library} condivisa e la passa ad entrambi i service,
+     * così tracce e playlist vivono nello stesso contenitore.
      */
     @FXML
     public void initialize() {
-        Library library        = new Library();
-        LibraryService service = new LibraryService(library);
+        Library library = new Library();
 
-        trackListController.setLibraryService(service);
+        LibraryService libraryService = new LibraryService(library);
+        trackListController.setLibraryService(libraryService);
         trackListController.setTrackTableView(trackTableView);
 
-        PlaylistService playlistService = new PlaylistService();
+        PlaylistService playlistService = new PlaylistService(library);
         playlistController.setPlaylistService(playlistService);
         playlistController.setPlaylistFlowPane(playlistFlowPane);
     }
