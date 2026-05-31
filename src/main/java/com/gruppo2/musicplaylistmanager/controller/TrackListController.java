@@ -89,10 +89,27 @@ public class TrackListController {
     }
 
     /**
-     * Elimina la traccia attualmente selezionata dalla libreria.
+     * Elimina la traccia selezionata dalla libreria e da tutte le playlist che
+     * la contengono, previa conferma dell'utente tramite dialog.
+     * Se nessuna traccia è selezionata mostra un alert di errore.
      */
     @FXML
     public void onDeleteTrack() {
+        Track selected = trackTableView.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showError("Seleziona una traccia da eliminare.");
+            return;
+        }
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Conferma eliminazione");
+        confirm.setHeaderText(null);
+        confirm.setContentText(
+                "Eliminare la traccia \"" + selected.getTitle() + "\"?\n" +
+                "Verrà rimossa anche da tutte le playlist che la contengono.");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            libraryService.removeTrack(selected);
+        }
     }
 
     /**

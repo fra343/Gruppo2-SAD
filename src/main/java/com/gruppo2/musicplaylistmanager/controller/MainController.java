@@ -4,7 +4,9 @@ import com.gruppo2.musicplaylistmanager.model.Library;
 import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.service.LibraryService;
 import com.gruppo2.musicplaylistmanager.service.PlaylistService;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.FlowPane;
 
@@ -19,13 +21,18 @@ public class MainController {
     private final TrackListController trackListController = new TrackListController();
     private final PlaylistController  playlistController  = new PlaylistController();
 
-    @FXML private TableView<Track> trackTableView;
-    @FXML private FlowPane         playlistFlowPane;
+    @FXML private TableView<Track>           trackTableView;
+    @FXML private TableColumn<Track, String> titleColumn;
+    @FXML private TableColumn<Track, String> authorColumn;
+    @FXML private TableColumn<Track, String> genreColumn;
+    @FXML private TableColumn<Track, String> yearColumn;
+    @FXML private TableColumn<Track, String> durationColumn;
+    @FXML private FlowPane                   playlistFlowPane;
 
     /**
      * Invocato da FXMLLoader al caricamento della vista.
-     * Crea la {@link Library} condivisa e la passa ad entrambi i service,
-     * così tracce e playlist vivono nello stesso contenitore.
+     * Crea la {@link Library} condivisa, la passa ad entrambi i service e
+     * configura il binding della TableView con l'ObservableList delle tracce.
      */
     @FXML
     public void initialize() {
@@ -34,6 +41,20 @@ public class MainController {
         LibraryService libraryService = new LibraryService(library);
         trackListController.setLibraryService(libraryService);
         trackListController.setTrackTableView(trackTableView);
+
+        titleColumn.setCellValueFactory(
+                data -> new SimpleStringProperty(data.getValue().getTitle()));
+        authorColumn.setCellValueFactory(
+                data -> new SimpleStringProperty(data.getValue().getAuthor()));
+        genreColumn.setCellValueFactory(
+                data -> new SimpleStringProperty(data.getValue().getGenre()));
+        yearColumn.setCellValueFactory(
+                data -> new SimpleStringProperty(String.valueOf(data.getValue().getYear())));
+        durationColumn.setCellValueFactory(data -> {
+            int s = data.getValue().getDuration();
+            return new SimpleStringProperty(String.format("%d:%02d", s / 60, s % 60));
+        });
+        trackTableView.setItems(libraryService.getAllTracks());
 
         PlaylistService playlistService = new PlaylistService(library);
         playlistController.setPlaylistService(playlistService);
@@ -49,6 +70,7 @@ public class MainController {
     /** Delega l'eliminazione di una traccia a {@link TrackListController}. */
     @FXML
     private void onDeleteTrackButton() {
+        trackListController.onDeleteTrack();
     }
 
     /** Delega la modifica di una traccia a {@link TrackListController}. */

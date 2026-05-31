@@ -18,6 +18,15 @@ public class Library {
         tracks.add(track);
     }
 
+    /**
+     * Rimuove una traccia dalla libreria.
+     *
+     * @return {@code true} se la traccia era presente ed è stata rimossa
+     */
+    public boolean removeTrack(Track track) {
+        return tracks.remove(track);
+    }
+
     /** Restituisce la lista osservabile delle tracce. */
     public ObservableList<Track> getTracks() {
         return tracks;

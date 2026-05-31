@@ -69,6 +69,19 @@ public class LibraryService {
     }
 
     /**
+     * Rimuove la traccia dalla libreria e da tutte le playlist che la contengono.
+     * La propagazione avviene prima della rimozione dalla libreria, così la
+     * traccia è ancora raggiungibile durante l'iterazione sulle playlist.
+     * Se la traccia non è presente nella libreria il metodo non produce effetti.
+     *
+     * @param track traccia da rimuovere
+     */
+    public void removeTrack(Track track) {
+        library.getPlaylists().forEach(p -> p.removeTrack(track));
+        library.removeTrack(track);
+    }
+
+    /**
      * Restituisce la lista osservabile di tutte le tracce della libreria.
      * La TableView della UI è direttamente agganciata a questa lista e si
      * aggiorna automaticamente a ogni modifica.

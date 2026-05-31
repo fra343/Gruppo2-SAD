@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class LibraryServiceTest {
 
+    private Library library;
     private LibraryService libraryService;
 
     private static Track validTrack() {
@@ -20,7 +21,8 @@ class LibraryServiceTest {
 
     @BeforeEach
     void setUp() {
-        libraryService = new LibraryService(new Library());
+        library = new Library();
+        libraryService = new LibraryService(library);
     }
 
     // addTrack: caso nominale 
@@ -234,15 +236,91 @@ class LibraryServiceTest {
         Track t = validTrack();
         libraryService.addTrack(t);
 
-       
+
         Playlist playlist = new Playlist("Test");
         playlist.addTrack(t);
 
         libraryService.updateTrack(t, "Titolo Nuovo", t.getAuthor(),
             t.getDuration(), t.getGenre(), t.getYear());
 
-        
+
         assertEquals("Titolo Nuovo", playlist.getTracks().get(0).getTitle());
+    }
+
+    // removeTrack
+
+    @Test
+    void removeTrackDecreasesLibrarySize() {
+        Track t = validTrack();
+        libraryService.addTrack(t);
+        libraryService.removeTrack(t);
+        assertEquals(0, libraryService.getAllTracks().size());
+    }
+
+    @Test
+    void removeTrackIsNoLongerPresentInLibrary() {
+        Track t = validTrack();
+        libraryService.addTrack(t);
+        libraryService.removeTrack(t);
+        assertFalse(libraryService.getAllTracks().contains(t));
+    }
+
+    @Test
+    void removeTrackLeavesOtherTracksIntact() {
+        Track t1 = validTrack();
+        Track t2 = new Track("B", "Y", 200, "Jazz", 2005);
+        libraryService.addTrack(t1);
+        libraryService.addTrack(t2);
+        libraryService.removeTrack(t1);
+        assertEquals(1, libraryService.getAllTracks().size());
+        assertTrue(libraryService.getAllTracks().contains(t2));
+    }
+
+    @Test
+    void removeTrackPropagatestoPlaylist() {
+        Track t = validTrack();
+        libraryService.addTrack(t);
+        Playlist playlist = new Playlist("Test");
+        playlist.addTrack(t);
+        library.addPlaylist(playlist);
+        libraryService.removeTrack(t);
+        assertFalse(playlist.getTracks().contains(t));
+    }
+
+    @Test
+    void removeTrackDoesNotAffectOtherTracksInPlaylist() {
+        Track t1 = validTrack();
+        Track t2 = new Track("B", "Y", 200, "Jazz", 2005);
+        libraryService.addTrack(t1);
+        libraryService.addTrack(t2);
+        Playlist playlist = new Playlist("Test");
+        playlist.addTrack(t1);
+        playlist.addTrack(t2);
+        library.addPlaylist(playlist);
+        libraryService.removeTrack(t1);
+        assertFalse(playlist.getTracks().contains(t1));
+        assertTrue(playlist.getTracks().contains(t2));
+    }
+
+    @Test
+    void removeTrackPropagatestoMultiplePlaylists() {
+        Track t = validTrack();
+        libraryService.addTrack(t);
+        Playlist p1 = new Playlist("P1");
+        Playlist p2 = new Playlist("P2");
+        p1.addTrack(t);
+        p2.addTrack(t);
+        library.addPlaylist(p1);
+        library.addPlaylist(p2);
+        libraryService.removeTrack(t);
+        assertFalse(p1.getTracks().contains(t));
+        assertFalse(p2.getTracks().contains(t));
+    }
+
+    @Test
+    void removeNonExistentTrackDoesNotThrow() {
+        Track t = validTrack();
+        assertDoesNotThrow(() -> libraryService.removeTrack(t));
     }
 
 }
