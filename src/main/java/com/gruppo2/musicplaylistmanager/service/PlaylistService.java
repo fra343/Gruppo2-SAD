@@ -2,6 +2,7 @@ package com.gruppo2.musicplaylistmanager.service;
 
 import com.gruppo2.musicplaylistmanager.model.Library;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
+import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.util.ValidationUtils;
 import javafx.collections.ObservableList;
 
@@ -51,6 +52,37 @@ public class PlaylistService {
      */
     public void deletePlaylist(Playlist playlist) {
         library.removePlaylist(playlist);
+    }
+
+    /**
+     * Aggiunge una traccia alla playlist indicata.
+     * Il controllo duplicati si basa sull'UUID della traccia (via
+     * {@link Playlist#addTrack}, che usa {@link Track#equals}).
+     * Se la traccia è già presente la playlist rimane invariata e viene
+     * lanciata un'eccezione.
+     *
+     * @param playlist playlist di destinazione
+     * @param track    traccia da aggiungere
+     * @throws IllegalArgumentException se la traccia è già presente nella playlist
+     */
+    public void addTrackToPlaylist(Playlist playlist, Track track) {
+        if (playlist.getTracks().contains(track)) {
+            throw new IllegalArgumentException(
+                    "La traccia \"" + track.getTitle() + "\" è già presente nella playlist.");
+        }
+        playlist.addTrack(track);
+    }
+
+    /**
+     * Rimuove una traccia dalla playlist indicata.
+     * La traccia rimane disponibile nella libreria globale.
+     * Se la traccia non è presente nella playlist il metodo non produce effetti.
+     *
+     * @param playlist playlist da cui rimuovere
+     * @param track    traccia da rimuovere
+     */
+    public void removeTrackFromPlaylist(Playlist playlist, Track track) {
+        playlist.removeTrack(track);
     }
 
     /**

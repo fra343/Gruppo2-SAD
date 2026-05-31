@@ -1,5 +1,8 @@
 package com.gruppo2.musicplaylistmanager.controller;
 
+import com.gruppo2.musicplaylistmanager.command.AddTrackToLibraryCommand;
+import com.gruppo2.musicplaylistmanager.command.CommandHistory;
+import com.gruppo2.musicplaylistmanager.command.RemoveTrackFromLibraryCommand;
 import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.service.LibraryService;
 import javafx.fxml.FXML;
@@ -16,12 +19,20 @@ import java.util.Optional;
 
 /**
  * Controller che gestisce le operazioni sulle tracce: aggiunta, eliminazione
- * e modifica. Riceve il riferimento alla {@link TableView} e al
- * {@link LibraryService} da {@link MainController} tramite i rispettivi setter.
+ * e modifica. Riceve il riferimento alla {@link TableView}, al
+ * {@link LibraryService} e alla {@link CommandHistory} condivisa da
+ * {@link MainController} tramite i rispettivi setter.
+ * <p>
+ * Tutte le operazioni di scrittura vengono incapsulate in un oggetto
+ * {@link com.gruppo2.musicplaylistmanager.command.Command} e affidate alla
+ * {@code CommandHistory}, in modo che l'undo possa essere abilitato in US-12
+ * senza modificare questo controller.
+ * </p>
  */
 public class TrackListController {
 
-    private LibraryService libraryService;
+    private LibraryService   libraryService;
+    private CommandHistory   commandHistory;
     private TableView<Track> trackTableView;
 
     /**
@@ -31,6 +42,16 @@ public class TrackListController {
      */
     public void setLibraryService(LibraryService libraryService) {
         this.libraryService = libraryService;
+    }
+
+    /**
+     * Inietta la {@link CommandHistory} condivisa, usata per registrare
+     * le operazioni di aggiunta, modifica e rimozione di tracce.
+     *
+     * @param commandHistory storia dei comandi condivisa con gli altri controller
+     */
+    public void setCommandHistory(CommandHistory commandHistory) {
+        this.commandHistory = commandHistory;
     }
 
     /**
@@ -44,7 +65,7 @@ public class TrackListController {
 
     /**
      * Apre il form di inserimento e, alla conferma, crea e aggiunge una nuova
-     * traccia alla libreria tramite {@link LibraryService#addTrack}.
+     * traccia alla libreria tramite {@link AddTrackToLibraryCommand}.
      * Se i dati non superano la validazione mostra un alert di errore e la
      * libreria resta invariata.
      */
@@ -76,8 +97,7 @@ public class TrackListController {
                         duration,
                         genreField.getText().trim(),
                         year);
-                libraryService.addTrack(track);
-                // La TableView si aggiorna da sola grazie all'ObservableList
+                commandHistory.push(new AddTrackToLibraryCommand(libraryService, track));
             }
         } catch (NumberFormatException e) {
             showError("Durata e anno devono essere numeri interi.");
@@ -91,6 +111,7 @@ public class TrackListController {
     /**
      * Elimina la traccia selezionata dalla libreria e da tutte le playlist che
      * la contengono, previa conferma dell'utente tramite dialog.
+     * L'operazione viene incapsulata in un {@link RemoveTrackFromLibraryCommand}.
      * Se nessuna traccia è selezionata mostra un alert di errore.
      */
     @FXML
@@ -108,7 +129,7 @@ public class TrackListController {
                 "Verrà rimossa anche da tutte le playlist che la contengono.");
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            libraryService.removeTrack(selected);
+            commandHistory.push(new RemoveTrackFromLibraryCommand(libraryService, selected));
         }
     }
 

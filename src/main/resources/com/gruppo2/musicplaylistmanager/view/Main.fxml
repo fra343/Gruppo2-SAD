@@ -2,6 +2,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TableColumn?>
@@ -31,6 +32,8 @@
 
                 <Label text="Library"
                        style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1C1C1C;"/>
+                <Label text="Le tue tracce musicali"
+                       style="-fx-font-size: 12px; -fx-text-fill: #888888; -fx-font-style: italic;"/>
 
                 <!-- Pulsante aggiungi traccia -->
                 <HBox alignment="CENTER_LEFT">
@@ -39,13 +42,16 @@
                             style="-fx-background-color: #E8E8E8; -fx-text-fill: #1C1C1C; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 6 16 6 16;"/>
                 </HBox>
 
-                <!-- Pulsanti Modifica / Elimina -->
+                <!-- Pulsanti Modifica / Elimina / Aggiungi a playlist -->
                 <HBox spacing="8">
                     <Button text="Modifica"
                             onAction="#onEditTrackButton"
                             style="-fx-background-color: #E8E8E8; -fx-text-fill: #1C1C1C; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 6 16 6 16;"/>
                     <Button text="Elimina"
                             onAction="#onDeleteTrackButton"
+                            style="-fx-background-color: #E8E8E8; -fx-text-fill: #1C1C1C; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 6 16 6 16;"/>
+                    <Button text="Aggiungi a playlist"
+                            onAction="#onAddToPlaylistButton"
                             style="-fx-background-color: #E8E8E8; -fx-text-fill: #1C1C1C; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 6 16 6 16;"/>
                 </HBox>
 
@@ -67,7 +73,7 @@
                 </TableView>
             </VBox>
 
-            <!-- == PANNELLO DESTRO: Playlist (US5 - Francesco Apicella) == -->
+            <!-- == PANNELLO DESTRO: Playlist == -->
             <VBox HBox.hgrow="ALWAYS"
                   style="-fx-background-color: #F5F5F5;"
                   spacing="12">
@@ -77,6 +83,8 @@
 
                 <Label text="Playlist"
                        style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1C1C1C;"/>
+                <Label text="Raccolte di tracce dalla libreria"
+                       style="-fx-font-size: 12px; -fx-text-fill: #888888; -fx-font-style: italic;"/>
 
                 <!-- Pulsanti Crea / Elimina playlist -->
                 <HBox spacing="8">
@@ -88,19 +96,39 @@
                             style="-fx-background-color: #E8E8E8; -fx-text-fill: #1C1C1C; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 6 16 6 16;"/>
                 </HBox>
 
-                <!-- Griglia di blocchi playlist, scorribile -->
+                <!-- Griglia di card playlist, scorribile -->
                 <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true"
                             style="-fx-background-color: transparent; -fx-border-color: transparent;">
                     <FlowPane fx:id="playlistFlowPane"
                               hgap="14" vgap="14"
                               style="-fx-background-color: transparent; -fx-padding: 4;"/>
                 </ScrollPane>
+
+                <!-- Dettaglio playlist selezionata: tracce + pulsante rimozione.
+                     Nascosto (visible=false, managed=false) finché non si clicca
+                     su una card; PlaylistController lo mostra dinamicamente. -->
+                <VBox fx:id="playlistDetailPane"
+                      visible="false" managed="false"
+                      spacing="6"
+                      style="-fx-background-color: white; -fx-background-radius: 8;
+                             -fx-border-color: #E0E0E0; -fx-border-radius: 8; -fx-padding: 10;">
+                    <Label fx:id="playlistDetailLabel"
+                           text="Tracce nella playlist"
+                           style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1C1C1C;"/>
+                    <ListView fx:id="playlistTrackListView"
+                              prefHeight="160"
+                              style="-fx-background-color: transparent; -fx-border-color: #EEEEEE;"/>
+                    <Button text="Rimuovi dalla playlist"
+                            onAction="#onRemoveFromPlaylistButton"
+                            style="-fx-background-color: #E8E8E8; -fx-text-fill: #1C1C1C; -fx-font-weight: bold; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 6 16 6 16;"/>
+                </VBox>
+
             </VBox>
 
         </HBox>
     </center>
 
-    <!-- ===== PLAYER IN BASSO (placeholder — verrà implementato in sprint futuri) ===== -->
+    <!-- ===== PLAYER IN BASSO (placeholder — verrà implementato in Sprint 2) ===== -->
     <bottom>
         <VBox style="-fx-background-color: #EBEBEB; -fx-border-color: #D5D5D5; -fx-border-width: 1 0 0 0;"
               spacing="6">

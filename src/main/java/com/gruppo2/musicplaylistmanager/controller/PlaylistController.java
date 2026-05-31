@@ -1,6 +1,12 @@
 package com.gruppo2.musicplaylistmanager.controller;
 
+import com.gruppo2.musicplaylistmanager.command.AddTrackToPlaylistCommand;
+import com.gruppo2.musicplaylistmanager.command.CommandHistory;
+import com.gruppo2.musicplaylistmanager.command.CreatePlaylistCommand;
+import com.gruppo2.musicplaylistmanager.command.DeletePlaylistCommand;
+import com.gruppo2.musicplaylistmanager.command.RemoveTrackFromPlaylistCommand;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
+import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.service.PlaylistService;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
@@ -10,6 +16,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
@@ -17,14 +25,27 @@ import javafx.scene.layout.VBox;
 import java.util.Optional;
 
 /**
- * Controller per la creazione ed eliminazione delle playlist.
- * Visualizza le playlist come card cliccabili nel pannello destro e mantiene
- * il riferimento alla playlist attualmente selezionata.
+ * Controller per la gestione delle playlist: creazione, eliminazione,
+ * aggiunta e rimozione di tracce da una playlist selezionata.
+ * <p>
+ * Visualizza le playlist come card cliccabili nel pannello destro e,
+ * quando una card è selezionata, mostra un pannello di dettaglio con
+ * le tracce contenute e i pulsanti di aggiunta/rimozione.
+ * </p>
+ * Le operazioni di modifica (aggiunta e rimozione di tracce) vengono
+ * incapsulate in oggetti {@link com.gruppo2.musicplaylistmanager.command.Command}
+ * e affidate alla {@link CommandHistory} condivisa, in modo che l'undo
+ * possa essere abilitato in US-12 senza modificare questo controller.
  */
 public class PlaylistController {
 
     private PlaylistService playlistService;
-    private FlowPane playlistFlowPane;
+    private CommandHistory  commandHistory;
+    private FlowPane        playlistFlowPane;
+    private TableView<Track> libraryTableView;
+    private VBox            playlistDetailPane;
+    private Label           playlistDetailLabel;
+    private ListView<Track> playlistTrackListView;
 
     /** Playlist attualmente selezionata tramite click su una card, o {@code null}. */
     private Playlist selectedPlaylist = null;
@@ -39,23 +60,56 @@ public class PlaylistController {
     }
 
     /**
+     * Inietta la {@link CommandHistory} condivisa, usata per registrare
+     * le operazioni di aggiunta e rimozione di tracce.
+     *
+     * @param commandHistory storia dei comandi condivisa con gli altri controller
+     */
+    public void setCommandHistory(CommandHistory commandHistory) {
+        this.commandHistory = commandHistory;
+    }
+
+    /**
+     * Inietta la TableView della libreria, necessaria per leggere
+     * la traccia selezionata al momento dell'aggiunta a una playlist.
+     *
+     * @param libraryTableView tabella delle tracce della libreria
+     */
+    public void setLibraryTableView(TableView<Track> libraryTableView) {
+        this.libraryTableView = libraryTableView;
+    }
+
+    /**
      * Collega il {@link FlowPane} al controller e registra un listener
-     * sull'ObservableList delle playlist: ogni aggiunta o rimozione di playlist
+     * sull'ObservableList delle playlist: ogni modifica alla lista
      * ricostruisce automaticamente le card nel pannello.
      *
      * @param playlistFlowPane pannello in cui vengono visualizzate le card
      */
     public void setPlaylistFlowPane(FlowPane playlistFlowPane) {
         this.playlistFlowPane = playlistFlowPane;
-        playlistService.getAllPlaylists().addListener((ListChangeListener<Playlist>) change -> {
-            rebuildCards();
-        });
+        playlistService.getAllPlaylists().addListener(
+                (ListChangeListener<Playlist>) change -> rebuildCards());
     }
 
     /**
-     * Restituisce la playlist attualmente selezionata tramite click su una card.
+     * Inietta i componenti del pannello di dettaglio della playlist selezionata:
+     * il contenitore (inizialmente nascosto), l'etichetta con il nome della
+     * playlist e la ListView delle tracce contenute.
      *
-     * @return playlist selezionata, o {@code null} se nessuna è selezionata
+     * @param pane     VBox contenitore del dettaglio
+     * @param label    Label che mostra "Tracce in: &lt;nome&gt;"
+     * @param listView ListView collegata all'ObservableList della playlist
+     */
+    public void setPlaylistDetail(VBox pane, Label label, ListView<Track> listView) {
+        this.playlistDetailPane  = pane;
+        this.playlistDetailLabel = label;
+        this.playlistTrackListView = listView;
+    }
+
+    /**
+     * @return la playlist attualmente selezionata, o {@code null} se nessuna
+     *         card è selezionata
      */
     public Playlist getSelectedPlaylist() {
         return selectedPlaylist;
@@ -83,7 +137,7 @@ public class PlaylistController {
         Optional<ButtonType> result = dialog.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
-                playlistService.createPlaylist(nameField.getText());
+                commandHistory.push(new CreatePlaylistCommand(playlistService, nameField.getText()));
             } catch (IllegalArgumentException ex) {
                 showError(ex.getMessage());
             }
@@ -92,8 +146,9 @@ public class PlaylistController {
 
     /**
      * Elimina la playlist attualmente selezionata tramite
-     * {@link PlaylistService#deletePlaylist}. Mostra un errore se nessuna
-     * playlist è selezionata. La lista delle card si aggiorna automaticamente.
+     * {@link PlaylistService#deletePlaylist}, previa conferma dell'utente.
+     * Mostra un errore se nessuna playlist è selezionata.
+     * La lista delle card si aggiorna automaticamente tramite il listener.
      */
     @FXML
     public void onDeletePlaylist() {
@@ -101,33 +156,88 @@ public class PlaylistController {
             showError("Seleziona una playlist da eliminare.");
             return;
         }
-        playlistService.deletePlaylist(selectedPlaylist);
-        selectedPlaylist = null;
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Conferma eliminazione");
+        confirm.setHeaderText(null);
+        confirm.setContentText(
+                "Eliminare la playlist \"" + selectedPlaylist.getName() + "\"?");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            commandHistory.push(new DeletePlaylistCommand(playlistService, selectedPlaylist));
+            selectedPlaylist = null;
+        }
+    }
+
+    /**
+     * Aggiunge la traccia selezionata nella libreria alla playlist corrente.
+     * L'operazione viene incapsulata in un {@link AddTrackToPlaylistCommand}
+     * e affidata alla {@link CommandHistory}.
+     * Mostra un errore se nessuna playlist o nessuna traccia è selezionata,
+     * o se la traccia è già presente nella playlist.
+     */
+    public void onAddToPlaylist() {
+        if (selectedPlaylist == null) {
+            showError("Seleziona prima una playlist.");
+            return;
+        }
+        Track selectedTrack = libraryTableView.getSelectionModel().getSelectedItem();
+        if (selectedTrack == null) {
+            showError("Seleziona una traccia dalla libreria.");
+            return;
+        }
+        try {
+            commandHistory.push(
+                    new AddTrackToPlaylistCommand(playlistService, selectedPlaylist, selectedTrack));
+        } catch (IllegalArgumentException ex) {
+            showError(ex.getMessage());
+        }
+    }
+
+    /**
+     * Rimuove la traccia selezionata nel pannello di dettaglio dalla playlist
+     * corrente. L'operazione viene incapsulata in un
+     * {@link RemoveTrackFromPlaylistCommand} e affidata alla {@link CommandHistory}.
+     * Mostra un errore se nessuna playlist o nessuna traccia è selezionata.
+     */
+    public void onRemoveFromPlaylist() {
+        if (selectedPlaylist == null) {
+            showError("Seleziona prima una playlist.");
+            return;
+        }
+        Track selectedTrack = playlistTrackListView.getSelectionModel().getSelectedItem();
+        if (selectedTrack == null) {
+            showError("Seleziona una traccia dalla playlist da rimuovere.");
+            return;
+        }
+        commandHistory.push(
+                new RemoveTrackFromPlaylistCommand(playlistService, selectedPlaylist, selectedTrack));
     }
 
     /**
      * Ricostruisce tutte le card nel pannello partendo dalla lista corrente
-     * delle playlist. Viene invocato automaticamente dal listener ogni volta
-     * che la lista cambia.
+     * delle playlist, azzera la selezione e nasconde il pannello di dettaglio.
+     * Viene invocato automaticamente dal listener ogni volta che la lista cambia.
      */
     private void rebuildCards() {
         playlistFlowPane.getChildren().clear();
         selectedPlaylist = null;
+        hidePlaylistDetail();
         for (Playlist p : playlistService.getAllPlaylists()) {
             playlistFlowPane.getChildren().add(createCard(p));
         }
     }
 
     /**
-     * Crea la card visiva per una singola playlist: blocco grigio arrotondato
-     * con il nome. Il click sulla card la seleziona evidenziandola.
+     * Crea la card visiva per una singola playlist.
+     * Il click seleziona la card, la evidenzia e mostra il pannello di dettaglio.
      *
      * @param playlist playlist da rappresentare
      * @return nodo JavaFX che rappresenta la card
      */
     private Node createCard(Playlist playlist) {
         Label nameLabel = new Label(playlist.getName());
-        nameLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #333333; -fx-wrap-text: true;");
+        nameLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;"
+                + " -fx-text-fill: #333333; -fx-wrap-text: true;");
         nameLabel.setMaxWidth(98);
 
         VBox card = new VBox(nameLabel);
@@ -140,9 +250,37 @@ public class PlaylistController {
             resetAllCards();
             card.setStyle(styleCard(true));
             selectedPlaylist = playlist;
+            showPlaylistDetail(playlist);
         });
 
         return card;
+    }
+
+    /**
+     * Mostra il pannello di dettaglio per la playlist indicata:
+     * aggiorna l'etichetta e collega la ListView all'ObservableList della playlist.
+     * Il binding diretto fa sì che la vista si aggiorni automaticamente
+     * a ogni aggiunta o rimozione di tracce.
+     *
+     * @param playlist playlist di cui mostrare il contenuto
+     */
+    private void showPlaylistDetail(Playlist playlist) {
+        if (playlistDetailPane == null) return;
+        playlistDetailLabel.setText("Tracce in: " + playlist.getName());
+        playlistTrackListView.setItems(playlist.getTracks());
+        playlistDetailPane.setVisible(true);
+        playlistDetailPane.setManaged(true);
+    }
+
+    /**
+     * Nasconde il pannello di dettaglio e scollega la ListView
+     * dall'eventuale ObservableList precedente.
+     */
+    private void hidePlaylistDetail() {
+        if (playlistDetailPane == null) return;
+        playlistDetailPane.setVisible(false);
+        playlistDetailPane.setManaged(false);
+        playlistTrackListView.setItems(null);
     }
 
     /** Rimuove la selezione visiva da tutte le card. */
@@ -155,7 +293,8 @@ public class PlaylistController {
     private String styleCard(boolean selected) {
         String base = "-fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 8;";
         return selected
-                ? base + " -fx-background-color: #C8C8C8; -fx-border-color: #888; -fx-border-radius: 8; -fx-border-width: 2;"
+                ? base + " -fx-background-color: #C8C8C8;"
+                        + " -fx-border-color: #888; -fx-border-radius: 8; -fx-border-width: 2;"
                 : base + " -fx-background-color: #E8E8E8;";
     }
 
