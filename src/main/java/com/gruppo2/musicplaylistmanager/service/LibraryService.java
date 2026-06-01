@@ -38,6 +38,15 @@ public class LibraryService {
         ValidationUtils.requireNonEmpty(track.getGenre(), "Genere");
         ValidationUtils.requireValidDuration(track.getDuration());
         ValidationUtils.requireValidYear(track.getYear());
+        boolean isDuplicate = library.getTracks().stream().anyMatch(t ->
+            t.getTitle().equalsIgnoreCase(track.getTitle()) &&
+            t.getAuthor().equalsIgnoreCase(track.getAuthor()) &&
+            t.getGenre().equalsIgnoreCase(track.getGenre())
+        );
+        if (isDuplicate) {
+            throw new IllegalArgumentException(
+                "Esiste già una traccia con lo stesso titolo, autore e genere.");
+        }
         library.addTrack(track);
     }
 

@@ -63,7 +63,7 @@ class TrackTest {
         assertTrue(track.getTags().isEmpty());
     }
 
-    // --- equals ---
+    // equals 
 
     @Test
     void equalsWithSameInstanceReturnsTrue() {
@@ -86,14 +86,14 @@ class TrackTest {
         assertNotEquals("not a track", track);
     }
 
-    // --- hashCode ---
+    // hashCode 
 
     @Test
     void hashCodeIsConsistent() {
         assertEquals(track.hashCode(), track.hashCode());
     }
 
-    // --- toString ---
+    //  toString 
 
     @Test
     void toStringContainsTitleAuthorYear() {

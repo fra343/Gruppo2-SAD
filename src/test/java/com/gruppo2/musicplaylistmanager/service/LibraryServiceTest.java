@@ -122,6 +122,46 @@ class LibraryServiceTest {
         assertThrows(IllegalArgumentException.class, () -> libraryService.addTrack(t));
     }
 
+    // addTrack: duplicati
+
+    @Test
+    void addDuplicateTrackThrows() {
+        libraryService.addTrack(new Track("Title", "Author", 180, "Pop", 2000));
+        Track duplicate = new Track("Title", "Author", 200, "Pop", 2010);
+        assertThrows(IllegalArgumentException.class, () -> libraryService.addTrack(duplicate));
+    }
+
+    @Test
+    void addDuplicateTrackCaseInsensitiveThrows() {
+        libraryService.addTrack(new Track("Title", "Author", 180, "Pop", 2000));
+        Track duplicate = new Track("TITLE", "author", 200, "POP", 2010);
+        assertThrows(IllegalArgumentException.class, () -> libraryService.addTrack(duplicate));
+    }
+
+    @Test
+    void addTrackSameTitleAuthorDifferentGenreIsAllowed() {
+        libraryService.addTrack(new Track("Title", "Author", 180, "Pop", 2000));
+        Track different = new Track("Title", "Author", 180, "Rock", 2000);
+        assertDoesNotThrow(() -> libraryService.addTrack(different));
+        assertEquals(2, libraryService.getAllTracks().size());
+    }
+
+    @Test
+    void addTrackSameTitleGenreDifferentAuthorIsAllowed() {
+        libraryService.addTrack(new Track("Title", "Author", 180, "Pop", 2000));
+        Track different = new Track("Title", "Other Author", 180, "Pop", 2000);
+        assertDoesNotThrow(() -> libraryService.addTrack(different));
+        assertEquals(2, libraryService.getAllTracks().size());
+    }
+
+    @Test
+    void libraryRemainsUnchangedAfterDuplicateAdd() {
+        libraryService.addTrack(new Track("Title", "Author", 180, "Pop", 2000));
+        Track duplicate = new Track("Title", "Author", 200, "Pop", 2010);
+        assertThrows(IllegalArgumentException.class, () -> libraryService.addTrack(duplicate));
+        assertEquals(1, libraryService.getAllTracks().size());
+    }
+
     //  addTrack: la libreria rimane invariata in caso di errore
 
     @Test
