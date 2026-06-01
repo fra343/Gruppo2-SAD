@@ -1,0 +1,307 @@
+/* ============================================================
+   Music Playlist Manager : foglio di stile (colori diretti)
+   ------------------------------------------------------------
+   Per cambiare l'accento dell'app, sostituisci #2E6FE0 (blu dei
+   pulsanti principali e del play) con il colore che preferisci.
+   ============================================================ */
+.root {
+    -fx-background-color: #FAFAFA;
+}
+
+/* ============================================================
+   PANNELLI
+   ============================================================ */
+.panel-left {
+    -fx-background-color: #FFFFFF;
+    /* linea di separazione tra Libreria e Playlist */
+    -fx-border-color: #DCDCE1;
+    -fx-border-width: 0 1 0 0;
+}
+.panel-right {
+    -fx-background-color: #F4F4F6;
+}
+
+.panel-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F1F22;
+}
+.panel-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #8A8A90;
+    -fx-font-style: italic;
+}
+
+/* ============================================================
+   PULSANTI
+   ============================================================ */
+.btn {
+    -fx-background-color: #FFFFFF;
+    -fx-background-insets: 0;
+    -fx-background-radius: 18;
+    -fx-border-color: #D7D7DE;
+    -fx-border-radius: 18;
+    -fx-border-width: 1;
+    -fx-text-fill: #1F1F22;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-padding: 6 16 6 16;
+    -fx-cursor: hand;
+}
+.btn:hover   { -fx-background-color: #F2F2F5; -fx-border-color: #C7C7CF; }
+.btn:pressed { -fx-background-color: #E9E9EE; -fx-border-color: #BDBDC6; }
+.btn:focused { -fx-focus-color: transparent; -fx-faint-focus-color: transparent; }
+
+/* azione primaria: accento blu, senza bordo */
+.btn-primary {
+    -fx-background-color: #2E6FE0;
+    -fx-border-color: transparent;
+    -fx-text-fill: white;
+}
+.btn-primary:hover   { -fx-background-color: #2B63C7; }
+.btn-primary:pressed { -fx-background-color: #2557AE; }
+
+/* azioni distruttive: neutre, rosso tenue solo in hover */
+.btn-danger:hover   { -fx-background-color: #FBEFEE; -fx-border-color: #E7C7C3; -fx-text-fill: #C0392B; }
+.btn-danger:pressed { -fx-background-color: #F2DEDB; -fx-border-color: #DDB6B1; -fx-text-fill: #C0392B; }
+
+/* ============================================================
+   TABELLA TRACCE
+   ============================================================ */
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-table-cell-border-color: transparent;
+}
+.table-view:focused {
+    -fx-background-color: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+.table-view .column-header-background {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.table-view .column-header,
+.table-view .filler {
+    -fx-size: 36px;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #E6E6EA transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.table-view .column-header .label {
+    -fx-text-fill: #8A8A90;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 0 0 8;
+}
+.table-view .show-hide-columns-button {
+    -fx-background-color: transparent;
+}
+.table-view .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-cell-size: 40px;
+}
+.table-view .table-row-cell:hover {
+    -fx-background-color: #F0F0F2;
+    -fx-background-radius: 8;
+    -fx-background-insets: 1 6 1 6;
+}
+.table-view .table-row-cell:selected {
+    -fx-background-color: #E7E7EB;
+    -fx-background-radius: 8;
+    -fx-background-insets: 1 6 1 6;
+}
+.table-view .table-row-cell:empty {
+    -fx-background-color: transparent;
+}
+.table-view .table-cell {
+    -fx-text-fill: #1F1F22;
+    -fx-font-size: 13px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 8 0 8;
+    -fx-border-color: transparent;
+}
+.table-view .table-row-cell:selected .table-cell {
+    -fx-text-fill: #1F1F22;
+}
+.table-view .placeholder .label {
+    -fx-text-fill: #BBBBBB;
+    -fx-font-style: italic;
+    -fx-font-size: 13px;
+}
+
+/* ============================================================
+   SCROLLPANE + SCROLLBAR (fini e discrete)
+   ============================================================ */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+.scroll-bar:vertical,
+.scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+.scroll-bar .thumb {
+    -fx-background-color: #CFCFD3;
+    -fx-background-radius: 6;
+    -fx-background-insets: 3;
+}
+.scroll-bar .thumb:hover {
+    -fx-background-color: #BCBCC1;
+}
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button,
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* griglia card playlist (FlowPane) */
+.playlist-grid {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+}
+
+/* ============================================================
+   DETTAGLIO PLAYLIST + LISTA
+   ============================================================ */
+.detail-pane {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 10;
+    -fx-border-color: #E6E6EA;
+    -fx-border-radius: 10;
+    -fx-padding: 10;
+}
+.detail-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F1F22;
+}
+
+.list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.list-view:focused {
+    -fx-background-color: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1F1F22;
+    -fx-font-size: 13px;
+    -fx-padding: 6 8 6 8;
+}
+.list-cell:filled:hover {
+    -fx-background-color: #F0F0F2;
+    -fx-background-radius: 8;
+}
+.list-cell:filled:selected {
+    -fx-background-color: #E7E7EB;
+    -fx-text-fill: #1F1F22;
+    -fx-background-radius: 8;
+}
+.list-cell:empty {
+    -fx-background-color: transparent;
+}
+
+/* ============================================================
+   PLAYER (barra in basso, piatta)
+   ============================================================ */
+.player-bar {
+    -fx-background-color: #F7F7F9;
+    -fx-border-color: #E6E6EA;
+    -fx-border-width: 1 0 0 0;
+}
+.player-now-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F1F22;
+}
+.player-now-sub {
+    -fx-font-size: 11px;
+    -fx-text-fill: #8A8A90;
+}
+.player-icon {
+    -fx-background-color: transparent;
+    -fx-background-radius: 50;
+    -fx-text-fill: #5A5A60;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-min-width: 34;
+    -fx-min-height: 34;
+    -fx-padding: 4;
+}
+.player-icon:hover {
+    -fx-background-color: #ECECEF;
+    -fx-text-fill: #1F1F22;
+}
+.player-play {
+    -fx-background-color: #2E6FE0;
+    -fx-text-fill: white;
+    -fx-background-radius: 50;
+    -fx-min-width: 44;
+    -fx-min-height: 44;
+    -fx-font-size: 15px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(46,111,224,0.30), 10, 0, 0, 2);
+}
+.player-play:hover {
+    -fx-background-color: #2B63C7;
+    -fx-effect: dropshadow(gaussian, rgba(46,111,224,0.42), 12, 0, 0, 3);
+}
+.player-time {
+    -fx-font-size: 11px;
+    -fx-text-fill: #8A8A90;
+}
+.player-slider .track {
+    -fx-background-color: #DADADE;
+    -fx-background-radius: 4;
+    -fx-pref-height: 5px;
+}
+.player-slider .thumb {
+    -fx-background-color: #2E6FE0;
+    -fx-background-radius: 50;
+    -fx-padding: 7;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 4, 0, 0, 1);
+}
+.player-slider .thumb:hover {
+    -fx-background-color: #2B63C7;
+}
+
+/* ============================================================
+   FORM (dialog aggiungi / modifica traccia)
+   ============================================================ */
+.form-grid {
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 18;
+}
+.form-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5A5A60;
+}
+.text-field {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 8;
+    -fx-border-color: #D7D7DE;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 7 10 7 10;
+    -fx-font-size: 13px;
+    -fx-text-fill: #1F1F22;
+    -fx-prompt-text-fill: #B0B0B6;
+}
+.text-field:focused {
+    -fx-border-color: #2E6FE0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}

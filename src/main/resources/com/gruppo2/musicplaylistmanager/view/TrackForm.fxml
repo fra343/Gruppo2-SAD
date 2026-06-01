@@ -6,23 +6,25 @@
 
 <GridPane xmlns="http://javafx.com/javafx"
           xmlns:fx="http://javafx.com/fxml"
+          stylesheets="@style.css"
+          styleClass="form-grid"
           hgap="10" vgap="10">
     <padding>
         <Insets top="15" right="15" bottom="15" left="15"/>
     </padding>
 
-    <Label text="Titolo:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+    <Label text="Titolo:" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
     <TextField fx:id="titleField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-    <Label text="Autore:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+    <Label text="Autore:" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
     <TextField fx:id="authorField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-    <Label text="Durata (secondi):" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+    <Label text="Durata (secondi):" styleClass="form-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
     <TextField fx:id="durationField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-    <Label text="Genere:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+    <Label text="Genere:" styleClass="form-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
     <TextField fx:id="genreField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
-    <Label text="Anno:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+    <Label text="Anno:" styleClass="form-label" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
     <TextField fx:id="yearField" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 </GridPane>
