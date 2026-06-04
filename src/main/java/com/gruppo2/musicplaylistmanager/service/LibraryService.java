@@ -30,7 +30,7 @@ public class LibraryService {
      *
      * @param track traccia da aggiungere
      * @throws IllegalArgumentException se titolo, autore o genere sono vuoti,
-     *                                  la durata è <= 0, o l'anno è fuori range
+     *                                  la durata è minore o uguale a 0, o l'anno è fuori range
      */
     public void addTrack(Track track) {
         ValidationUtils.requireNonEmpty(track.getTitle(), "Titolo");
