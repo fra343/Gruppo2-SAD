@@ -4,6 +4,7 @@ import com.gruppo2.musicplaylistmanager.command.CommandHistory;
 import com.gruppo2.musicplaylistmanager.model.Library;
 import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.service.LibraryService;
+import com.gruppo2.musicplaylistmanager.service.PlaybackService;
 import com.gruppo2.musicplaylistmanager.service.PlaylistService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
@@ -26,6 +27,7 @@ public class MainController {
     private final TrackListController trackListController = new TrackListController();
     private final PlaylistController  playlistController  = new PlaylistController();
 
+    @FXML private NowPlayingCtrl             nowPlayingController;
     @FXML private TableView<Track>           trackTableView;
     @FXML private TableColumn<Track, String> titleColumn;
     @FXML private TableColumn<Track, String> authorColumn;
@@ -47,6 +49,9 @@ public class MainController {
     public void initialize() {
         Library        library        = new Library();
         CommandHistory commandHistory = new CommandHistory();
+
+        PlaybackService playbackService = new PlaybackService();
+        nowPlayingController.setPlaybackService(playbackService);
 
         LibraryService libraryService = new LibraryService(library);
         trackListController.setLibraryService(libraryService);

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gruppo2.musicplaylistmanager.controller.NowPlayingCtrl"
+      styleClass="player-bar" spacing="6">
+    <padding>
+        <Insets top="10" right="24" bottom="10" left="24"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT">
+
+        <!-- Info brano corrente -->
+        <VBox prefWidth="220" spacing="2">
+            <Label fx:id="titleLabel" text="Nessun brano in riproduzione" styleClass="player-now-title"/>
+            <Label fx:id="authorLabel" text="—" styleClass="player-now-sub"/>
+        </VBox>
+
+        <!-- Pulsanti playback (centrati) -->
+        <HBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="14">
+            <Button fx:id="playPauseButton" text="▶️"  styleClass="player-play" onAction="#onPlayPause"/>
+            <Button fx:id="skipButton"      text="▶️|" styleClass="player-icon" onAction="#onSkip"/>
+        </HBox>
+
+        <!-- Selettori modalità (destra) -->
+        <HBox prefWidth="220" alignment="CENTER_RIGHT" spacing="14">
+            <Button fx:id="shuffleButton" text="⇄" styleClass="player-icon" onAction="#onShuffle"/>
+            <Button fx:id="loopButton"    text="↺" styleClass="player-icon" onAction="#onLoop"/>
+        </HBox>
+
+    </HBox>
+
+    <!-- Barra di avanzamento -->
+    <HBox alignment="CENTER" spacing="10">
+        <Label fx:id="elapsedLabel"  text="0:00" styleClass="player-time"/>
+        <ProgressBar fx:id="progressBar" HBox.hgrow="ALWAYS" progress="0" maxWidth="Infinity"/>
+        <Label fx:id="durationLabel" text="0:00" styleClass="player-time"/>
+    </HBox>
+
+</VBox>

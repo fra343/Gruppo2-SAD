@@ -4,10 +4,8 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
@@ -113,41 +111,9 @@
         </HBox>
     </center>
 
-    <!-- ===== PLAYER IN BASSO (placeholder, verra' implementato in Sprint 2) ===== -->
+    <!-- ===== PLAYER IN BASSO ===== -->
     <bottom>
-        <VBox styleClass="player-bar" spacing="6">
-            <padding>
-                <Insets top="10" right="24" bottom="10" left="24"/>
-            </padding>
-
-            <HBox alignment="CENTER_LEFT">
-                <!-- Info brano corrente -->
-                <VBox prefWidth="220" spacing="2">
-                    <Label text="Nessun brano in riproduzione" styleClass="player-now-title"/>
-                    <Label text="—" styleClass="player-now-sub"/>
-                </VBox>
-
-                <!-- Pulsanti playback (centrati) -->
-                <HBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="14">
-                    <Button text="|◀" styleClass="player-icon"/>
-                    <Button text="▶" styleClass="player-play"/>
-                    <Button text="▶|" styleClass="player-icon"/>
-                </HBox>
-
-                <!-- Shuffle / Repeat (destra) -->
-                <HBox prefWidth="220" alignment="CENTER_RIGHT" spacing="14">
-                    <Button text="⇄" styleClass="player-icon"/>
-                    <Button text="↺" styleClass="player-icon"/>
-                </HBox>
-            </HBox>
-
-            <!-- Barra di avanzamento -->
-            <HBox alignment="CENTER" spacing="10">
-                <Label text="0:00" styleClass="player-time"/>
-                <Slider HBox.hgrow="ALWAYS" min="0" max="100" value="0" styleClass="player-slider"/>
-                <Label text="0:00" styleClass="player-time"/>
-            </HBox>
-        </VBox>
+        <fx:include fx:id="nowPlaying" source="NowPlaying.fxml"/>
     </bottom>
 
 </BorderPane>
