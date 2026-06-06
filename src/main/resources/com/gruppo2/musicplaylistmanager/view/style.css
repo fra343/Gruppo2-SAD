@@ -212,6 +212,16 @@
 .list-cell:empty {
     -fx-background-color: transparent;
 }
+/* US-11: riga della traccia attualmente in riproduzione */
+.list-cell:filled:current {
+    -fx-background-color: #E3EDFB;
+    -fx-text-fill: #2E6FE0;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+}
+.list-cell:filled:current:hover {
+    -fx-background-color: #D6E4FA;
+}
 
 /* ============================================================
    PLAYER (barra in basso, piatta)

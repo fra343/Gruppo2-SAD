@@ -53,6 +53,8 @@ public class MainController {
         PlaybackService playbackService = new PlaybackService();
         nowPlayingController.setPlaybackService(playbackService);
         nowPlayingController.setSelectedPlaylistSupplier(playlistController::getSelectedPlaylist);
+        // US-11: evidenziazione della traccia in riproduzione nella lista della playlist.
+        nowPlayingController.highlightCurrentTrackIn(playlistTrackListView);
         playlistController.setPlaybackService(playbackService);
 
         LibraryService libraryService = new LibraryService(library);

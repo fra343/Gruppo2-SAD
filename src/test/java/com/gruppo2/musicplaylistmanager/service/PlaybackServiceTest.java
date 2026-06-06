@@ -341,4 +341,55 @@ class PlaybackServiceTest {
             assertNull(svc.currentTrackProperty().get());
         });
     }
+
+
+    //  US-11 – getCurrentIndex()
+
+    @Test
+    void getCurrentIndex_whenStopped_returnsMinusOne() throws Exception {
+        runFX(() -> {
+            PlaybackService svc = new PlaybackService();
+            assertEquals(-1, svc.getCurrentIndex());
+        });
+    }
+
+    @Test
+    void getCurrentIndex_afterPlay_returnsZero() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Track t2 = track("Song2", 200);
+            PlaybackService svc = new PlaybackService();
+            svc.play(playlistWith(t1, t2));
+
+            assertEquals(0, svc.getCurrentIndex());
+        });
+    }
+
+    @Test
+    void getCurrentIndex_afterSkip_advancesToNextPosition() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Track t2 = track("Song2", 200);
+            PlaybackService svc = new PlaybackService();
+            svc.play(playlistWith(t1, t2));
+            svc.skip();
+
+            assertEquals(1, svc.getCurrentIndex());
+        });
+    }
+
+    @Test
+    void getCurrentIndex_loop_wrapsBackToZero() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Track t2 = track("Song2", 200);
+            PlaybackService svc = new PlaybackService();
+            svc.play(playlistWith(t1, t2));
+            svc.setMode(PlaybackMode.LOOP);
+            svc.skip(); // -> indice 1
+            svc.skip(); // -> ritorno ciclico all'indice 0
+
+            assertEquals(0, svc.getCurrentIndex());
+        });
+    }
 }

@@ -137,6 +137,21 @@ public class PlaybackService {
     public Playlist getCurrentPlaylist() { return currentPlaylist; }
 
     /**
+     * Restituisce la posizione (0-based) della traccia attualmente in
+     * riproduzione all'interno della playlist corrente. Costituisce la
+     * determinazione dell'indice corrente su cui si basa l'evidenziazione
+     * della traccia in riproduzione nella vista della playlist (US-11).
+     *
+     * @return indice della traccia corrente nella playlist in riproduzione,
+     *         oppure {@code -1} se nessuna traccia è in riproduzione o la
+     *         traccia non è (più) presente nella playlist
+     */
+    public int getCurrentIndex() {
+        if (currentPlaylist == null || currentTrack.get() == null) return -1;
+        return currentPlaylist.getTracks().indexOf(currentTrack.get());
+    }
+
+    /**
      * @return property osservabile della traccia attualmente in riproduzione
      */
     public ObjectProperty<Track> currentTrackProperty() { return currentTrack; }
