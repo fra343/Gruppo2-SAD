@@ -52,6 +52,7 @@ public class MainController {
 
         PlaybackService playbackService = new PlaybackService();
         nowPlayingController.setPlaybackService(playbackService);
+        nowPlayingController.setSelectedPlaylistSupplier(playlistController::getSelectedPlaylist);
 
         LibraryService libraryService = new LibraryService(library);
         trackListController.setLibraryService(libraryService);
