@@ -3,6 +3,8 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
@@ -13,6 +15,10 @@
     <padding>
         <Insets top="10" right="24" bottom="10" left="24"/>
     </padding>
+
+    <fx:define>
+        <ToggleGroup fx:id="modeGroup"/>
+    </fx:define>
 
     <HBox alignment="CENTER_LEFT">
 
@@ -28,10 +34,13 @@
             <Button fx:id="skipButton"      text="▶️|" styleClass="player-icon" onAction="#onSkip"/>
         </HBox>
 
-        <!-- Selettori modalità (destra) -->
+        <!-- Selettori modalità (destra): shuffle e loop in mutua esclusione.
+             Nessuno selezionato = modalità sequenziale (default). -->
         <HBox prefWidth="220" alignment="CENTER_RIGHT" spacing="14">
-            <Button fx:id="shuffleButton" text="⇄" styleClass="player-icon" onAction="#onShuffle"/>
-            <Button fx:id="loopButton"    text="↺" styleClass="player-icon" onAction="#onLoop"/>
+            <ToggleButton fx:id="shuffleButton" text="⇄" styleClass="player-icon"
+                          onAction="#onShuffle" toggleGroup="$modeGroup"/>
+            <ToggleButton fx:id="loopButton"    text="↺" styleClass="player-icon"
+                          onAction="#onLoop"    toggleGroup="$modeGroup"/>
         </HBox>
 
     </HBox>

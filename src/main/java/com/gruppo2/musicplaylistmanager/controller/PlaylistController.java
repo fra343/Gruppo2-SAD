@@ -7,6 +7,7 @@ import com.gruppo2.musicplaylistmanager.command.DeletePlaylistCommand;
 import com.gruppo2.musicplaylistmanager.command.RemoveTrackFromPlaylistCommand;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
 import com.gruppo2.musicplaylistmanager.model.Track;
+import com.gruppo2.musicplaylistmanager.service.PlaybackService;
 import com.gruppo2.musicplaylistmanager.service.PlaylistService;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
@@ -39,13 +40,14 @@ import java.util.Optional;
  */
 public class PlaylistController {
 
-    private PlaylistService playlistService;
-    private CommandHistory  commandHistory;
-    private FlowPane        playlistFlowPane;
+    private PlaylistService  playlistService;
+    private PlaybackService  playbackService;
+    private CommandHistory   commandHistory;
+    private FlowPane         playlistFlowPane;
     private TableView<Track> libraryTableView;
-    private VBox            playlistDetailPane;
-    private Label           playlistDetailLabel;
-    private ListView<Track> playlistTrackListView;
+    private VBox             playlistDetailPane;
+    private Label            playlistDetailLabel;
+    private ListView<Track>  playlistTrackListView;
 
     /** Playlist attualmente selezionata tramite click su una card, o {@code null}. */
     private Playlist selectedPlaylist = null;
@@ -57,6 +59,16 @@ public class PlaylistController {
      */
     public void setPlaylistService(PlaylistService playlistService) {
         this.playlistService = playlistService;
+    }
+
+    /**
+     * Inietta il servizio di riproduzione condiviso, necessario per notificare
+     * la rimozione di una traccia durante la riproduzione .
+     *
+     * @param playbackService servizio di riproduzione condiviso
+     */
+    public void setPlaybackService(PlaybackService playbackService) {
+        this.playbackService = playbackService;
     }
 
     /**
@@ -208,6 +220,11 @@ public class PlaylistController {
         if (selectedTrack == null) {
             showError("Seleziona una traccia dalla playlist da rimuovere.");
             return;
+        }
+        // Notifica prima della rimozione: la traccia è ancora nella playlist,
+        // quindi la strategia può calcolarne la posizione corretta.
+        if (playbackService != null && selectedPlaylist.equals(playbackService.getCurrentPlaylist())) {
+            playbackService.notifyTrackRemoved(selectedTrack);
         }
         commandHistory.push(
                 new RemoveTrackFromPlaylistCommand(playlistService, selectedPlaylist, selectedTrack));

@@ -3,6 +3,7 @@ package com.gruppo2.musicplaylistmanager.service;
 import com.gruppo2.musicplaylistmanager.model.PlayState;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
 import com.gruppo2.musicplaylistmanager.model.Track;
+import com.gruppo2.musicplaylistmanager.playback.PlaybackMode;
 import javafx.application.Platform;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -224,6 +225,120 @@ class PlaybackServiceTest {
             svc.skip();
 
             assertEquals(0, svc.elapsedProperty().get());
+        });
+    }
+
+
+    //  US-08 – setMode()
+
+    @Test
+    void setMode_doesNotInterruptCurrentTrack() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Track t2 = track("Song2", 200);
+            Playlist p = playlistWith(t1, t2);
+            PlaybackService svc = new PlaybackService();
+            svc.play(p);
+
+            svc.setMode(PlaybackMode.SHUFFLE);
+
+            assertEquals(t1, svc.currentTrackProperty().get());
+            assertEquals(PlayState.PLAYING, svc.stateProperty().get());
+        });
+    }
+
+    @Test
+    void setMode_loop_skipWrapsAround() throws Exception {
+        runFX(() -> {
+            Track t1 = track("OnlyOne", 180);
+            Playlist p = playlistWith(t1);
+            PlaybackService svc = new PlaybackService();
+            svc.play(p);
+
+            svc.setMode(PlaybackMode.LOOP);
+            svc.skip();
+
+            assertEquals(t1, svc.currentTrackProperty().get());
+            assertEquals(PlayState.PLAYING, svc.stateProperty().get());
+        });
+    }
+
+    @Test
+    void setMode_sequential_afterLoop_skipsToNextThenStops() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Playlist p = playlistWith(t1);
+            PlaybackService svc = new PlaybackService();
+            svc.play(p);
+            svc.setMode(PlaybackMode.LOOP);
+
+            svc.setMode(PlaybackMode.SEQUENTIAL);
+            svc.skip();
+
+            assertEquals(PlayState.STOPPED, svc.stateProperty().get());
+        });
+    }
+
+
+    //  US-09b – notifyTrackRemoved()
+
+    @Test
+    void notifyTrackRemoved_nonCurrentTrack_playbackContinues() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Track t2 = track("Song2", 200);
+            Playlist p = playlistWith(t1, t2);
+            PlaybackService svc = new PlaybackService();
+            svc.play(p);
+
+            svc.notifyTrackRemoved(t2);
+
+            assertEquals(t1, svc.currentTrackProperty().get());
+            assertEquals(PlayState.PLAYING, svc.stateProperty().get());
+        });
+    }
+
+    @Test
+    void notifyTrackRemoved_currentTrack_skipsToNext() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Track t2 = track("Song2", 200);
+            Playlist p = playlistWith(t1, t2);
+            PlaybackService svc = new PlaybackService();
+            svc.play(p);
+
+            // t1 è ancora nella playlist: la strategia trova la sua posizione e restituisce t2
+            svc.notifyTrackRemoved(t1);
+
+            assertEquals(t2, svc.currentTrackProperty().get());
+            assertEquals(PlayState.PLAYING, svc.stateProperty().get());
+        });
+    }
+
+    @Test
+    void notifyTrackRemoved_currentTrack_noNext_stopsPlayback() throws Exception {
+        runFX(() -> {
+            Track t1 = track("OnlyOne", 180);
+            Playlist p = playlistWith(t1);
+            PlaybackService svc = new PlaybackService();
+            svc.play(p);
+
+            svc.notifyTrackRemoved(t1);
+
+            assertEquals(PlayState.STOPPED, svc.stateProperty().get());
+        });
+    }
+
+    @Test
+    void notifyTrackRemoved_whenStopped_hasNoEffect() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            PlaybackService svc = new PlaybackService();
+
+            svc.notifyTrackRemoved(t1);
+
+            assertEquals(PlayState.STOPPED, svc.stateProperty().get());
+            assertNull(svc.currentTrackProperty().get());
         });
     }
 }

@@ -108,7 +108,27 @@ public class PlaybackService {
      * @param mode nuova modalità di riproduzione
      */
     public void setMode(PlaybackMode mode) {
-        // TODO (FA): implementare in US-08
+        strategy = factory.create(mode);
+    }
+
+    /**
+     * Notifica il service che una traccia sta per essere rimossa dalla playlist
+     * corrente. Se la traccia coincide con quella in riproduzione, forza
+     * l'avanzamento alla successiva secondo la strategia attiva, o porta lo stato
+     * a {@link PlayState#STOPPED} se non esiste una traccia successiva.
+     * Se la traccia è diversa da quella corrente la riproduzione prosegue
+     * senza interruzioni.
+     * <p>
+     * Deve essere invocato <em>prima</em> che la traccia venga rimossa dalla
+     * playlist, in modo che la strategia possa calcolarne la posizione corretta.
+     *
+     * @param removed traccia che sta per essere rimossa
+     */
+    public void notifyTrackRemoved(Track removed) {
+        if (currentPlaylist == null || currentTrack.get() == null) return;
+        if (removed.equals(currentTrack.get())) {
+            skip();
+        }
     }
 
     /**

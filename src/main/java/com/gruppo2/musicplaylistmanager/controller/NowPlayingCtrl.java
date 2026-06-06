@@ -2,11 +2,13 @@ package com.gruppo2.musicplaylistmanager.controller;
 
 import com.gruppo2.musicplaylistmanager.model.PlayState;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
+import com.gruppo2.musicplaylistmanager.playback.PlaybackMode;
 import com.gruppo2.musicplaylistmanager.service.PlaybackService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ToggleButton;
 
 import java.util.function.Supplier;
 
@@ -18,18 +20,18 @@ import java.util.function.Supplier;
  */
 public class NowPlayingCtrl {
 
-    @FXML private Label       titleLabel;
-    @FXML private Label       authorLabel;
-    @FXML private Label       elapsedLabel;
-    @FXML private Label       durationLabel;
-    @FXML private ProgressBar progressBar;
-    @FXML private Button      playPauseButton;
-    @FXML private Button      skipButton;
-    @FXML private Button      shuffleButton;
-    @FXML private Button      loopButton;
+    @FXML private Label        titleLabel;
+    @FXML private Label        authorLabel;
+    @FXML private Label        elapsedLabel;
+    @FXML private Label        durationLabel;
+    @FXML private ProgressBar  progressBar;
+    @FXML private Button       playPauseButton;
+    @FXML private Button       skipButton;
+    @FXML private ToggleButton shuffleButton;
+    @FXML private ToggleButton loopButton;
 
-    private PlaybackService     playbackService;
-    private Supplier<Playlist>  selectedPlaylistSupplier;
+    private PlaybackService    playbackService;
+    private Supplier<Playlist> selectedPlaylistSupplier;
 
     /**
      * Inietta il servizio di riproduzione condiviso e predispone i binding
@@ -88,15 +90,27 @@ public class NowPlayingCtrl {
         playbackService.skip();
     }
 
-    /** Attiva la modalità shuffle. */
+    /**
+     * Attiva la modalità shuffle se il pulsante è selezionato,
+     * altrimenti ripristina la modalità sequenziale.
+     * Il ToggleGroup garantisce che shuffle e loop non siano attivi contemporaneamente.
+     */
     @FXML
     private void onShuffle() {
-        // TODO (FA): implementare in US-08
+        playbackService.setMode(
+            shuffleButton.isSelected() ? PlaybackMode.SHUFFLE : PlaybackMode.SEQUENTIAL
+        );
     }
 
-    /** Attiva la modalità loop. */
+    /**
+     * Attiva la modalità loop se il pulsante è selezionato,
+     * altrimenti ripristina la modalità sequenziale.
+     * Il ToggleGroup garantisce che shuffle e loop non siano attivi contemporaneamente.
+     */
     @FXML
     private void onLoop() {
-        // TODO (FA): implementare in US-08
+        playbackService.setMode(
+            loopButton.isSelected() ? PlaybackMode.LOOP : PlaybackMode.SEQUENTIAL
+        );
     }
 }
