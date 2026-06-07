@@ -1,5 +1,6 @@
 package com.gruppo2.musicplaylistmanager.command;
 
+import com.gruppo2.musicplaylistmanager.model.Playlist;
 import com.gruppo2.musicplaylistmanager.service.PlaylistService;
 
 /**
@@ -7,14 +8,15 @@ import com.gruppo2.musicplaylistmanager.service.PlaylistService;
  * <p>
  * {@link #execute()} delega a {@link PlaylistService#createPlaylist} e lancia
  * {@link IllegalArgumentException} se il nome è vuoto, blank o duplicato.
- * {@link #undo()} è lasciato come placeholder (TODO per US-12): per annullare
- * la creazione basterà invocare {@link PlaylistService#deletePlaylist}.
+ * Dopo la creazione cattura il riferimento all'oggetto {@link Playlist} appena
+ * aggiunto, necessario a {@link #undo()} per eliminare esattamente quella istanza.
  * </p>
  */
 public class CreatePlaylistCommand implements Command {
 
     private final PlaylistService playlistService;
-    private final String name;
+    private final String          name;
+    private Playlist              createdPlaylist;
 
     /**
      * @param playlistService servizio condiviso per la gestione delle playlist
@@ -26,23 +28,23 @@ public class CreatePlaylistCommand implements Command {
     }
 
     /**
-     * Crea la playlist con il nome indicato tramite il service.
+     * Crea la playlist con il nome indicato tramite il service e ne cattura
+     * il riferimento restituito, necessario per un eventuale undo successivo.
      *
      * @throws IllegalArgumentException se il nome è vuoto, blank o già esistente
      */
     @Override
     public void execute() {
-        playlistService.createPlaylist(name);
+        createdPlaylist = playlistService.createPlaylist(name);
     }
 
     /**
      * Annulla la creazione eliminando la playlist appena creata.
-     * <p>
-     * TODO: implementare in US-12.
-     * </p>
      */
     @Override
     public void undo() {
-        // TODO: implementare in US-12
+        if (createdPlaylist != null) {
+            playlistService.deletePlaylist(createdPlaylist);
+        }
     }
 }

@@ -26,14 +26,16 @@ public class PlaylistService {
     }
 
     /**
-     * Crea una nuova playlist con il nome indicato e la aggiunge alla libreria.
+     * Crea una nuova playlist con il nome indicato, la aggiunge alla libreria
+     * e restituisce l'oggetto creato.
      * Il nome viene normalizzato con {@code trim()} prima del controllo duplicati.
      *
      * @param name nome della playlist
+     * @return la {@link Playlist} appena creata e aggiunta alla libreria
      * @throws IllegalArgumentException se il nome è vuoto, blank,
      *                                  o già usato da un'altra playlist (confronto case-insensitive)
      */
-    public void createPlaylist(String name) {
+    public Playlist createPlaylist(String name) {
         ValidationUtils.requireNonEmpty(name, "Nome playlist");
         boolean duplicate = library.getPlaylists().stream()
                 .anyMatch(p -> p.getName().equalsIgnoreCase(name.trim()));
@@ -41,7 +43,9 @@ public class PlaylistService {
             throw new IllegalArgumentException(
                     "Esiste già una playlist con il nome '" + name.trim() + "'.");
         }
-        library.addPlaylist(new Playlist(name.trim()));
+        Playlist playlist = new Playlist(name.trim());
+        library.addPlaylist(playlist);
+        return playlist;
     }
 
     /**
@@ -52,6 +56,20 @@ public class PlaylistService {
      */
     public void deletePlaylist(Playlist playlist) {
         library.removePlaylist(playlist);
+    }
+
+    /**
+     * Reinserisce nella libreria una playlist precedentemente eliminata,
+     * preservandone UUID e tracce.
+     * Usato da {@link com.gruppo2.musicplaylistmanager.command.DeletePlaylistCommand#undo()}
+     * per ripristinare lo stato precedente senza creare un nuovo oggetto.
+     * Non esegue controlli di duplicati: è responsabilità del chiamante
+     * assicurarsi che la playlist non sia già presente.
+     *
+     * @param playlist playlist da ripristinare
+     */
+    public void restorePlaylist(Playlist playlist) {
+        library.addPlaylist(playlist);
     }
 
     /**
@@ -83,6 +101,20 @@ public class PlaylistService {
      */
     public void removeTrackFromPlaylist(Playlist playlist, Track track) {
         playlist.removeTrack(track);
+    }
+
+    /**
+     * Reinserisce una traccia in una playlist precedentemente eliminata, senza
+     * eseguire il controllo duplicati di business (già applicato all'aggiunta originale).
+     * Usato da {@link com.gruppo2.musicplaylistmanager.command.RemoveTrackFromLibraryCommand#undo()}
+     * per ripristinare lo stato precedente passando per il Service layer anziché
+     * accedere direttamente al Model.
+     *
+     * @param playlist playlist di destinazione
+     * @param track    traccia da ripristinare
+     */
+    public void restoreTrackToPlaylist(Playlist playlist, Track track) {
+        playlist.addTrack(track);
     }
 
     /**

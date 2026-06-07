@@ -8,8 +8,8 @@ import com.gruppo2.musicplaylistmanager.service.PlaylistService;
  * <p>
  * {@link #execute()} delega a {@link PlaylistService#deletePlaylist}.
  * Se la playlist non è presente non produce effetti.
- * {@link #undo()} è lasciato come placeholder (TODO per US-12): per annullare
- * occorrerà ricreare la playlist con le stesse tracce.
+ * {@link #undo()} ripristina l'oggetto {@link Playlist} originale
+ * (con UUID e tracce invariati) tramite {@link PlaylistService#restorePlaylist}.
  * </p>
  */
 public class DeletePlaylistCommand implements Command {
@@ -35,13 +35,11 @@ public class DeletePlaylistCommand implements Command {
     }
 
     /**
-     * Annulla l'eliminazione ricreando la playlist.
-     * <p>
-     * TODO: implementare in US-12.
-     * </p>
+     * Annulla l'eliminazione ripristinando l'oggetto {@link Playlist} originale
+     * (con UUID e tracce invariati) tramite {@link PlaylistService#restorePlaylist}.
      */
     @Override
     public void undo() {
-        // TODO: implementare in US-12
+        playlistService.restorePlaylist(playlist);
     }
 }

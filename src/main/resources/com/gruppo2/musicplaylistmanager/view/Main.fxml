@@ -49,17 +49,26 @@
                             styleClass="btn"/>
                 </HBox>
 
+                <!-- Pulsante Annulla (US-12): disabilitato se nessuna operazione è annullabile -->
+                <HBox spacing="8">
+                    <Button fx:id="undoButton"
+                            text="↩ Annulla"
+                            onAction="#onUndoButton"
+                            disable="true"
+                            styleClass="btn"/>
+                </HBox>
+
                 <!-- Tabella tracce -->
                 <TableView fx:id="trackTableView" VBox.vgrow="ALWAYS">
                     <placeholder>
                         <Label text="Nessuna traccia. Clicca + per iniziare."/>
                     </placeholder>
                     <columns>
-                        <TableColumn fx:id="titleColumn"    text="Titolo"   prefWidth="165"/>
-                        <TableColumn fx:id="authorColumn"   text="Autore"   prefWidth="100"/>
-                        <TableColumn fx:id="genreColumn"    text="Genere"   prefWidth="85"/>
-                        <TableColumn fx:id="yearColumn"     text="Anno"     prefWidth="50"/>
-                        <TableColumn fx:id="durationColumn" text="Durata"   prefWidth="60"/>
+                        <TableColumn fx:id="titleColumn"    text="Titolo"   prefWidth="140" resizable="false" reorderable="false"/>
+                        <TableColumn fx:id="authorColumn"   text="Autore"   prefWidth="90"  resizable="false" reorderable="false"/>
+                        <TableColumn fx:id="genreColumn"    text="Genere"   prefWidth="75"  resizable="false" reorderable="false"/>
+                        <TableColumn fx:id="yearColumn"     text="Anno"     prefWidth="65"  resizable="false" reorderable="false"/>
+                        <TableColumn fx:id="durationColumn" text="Durata"   prefWidth="54"  resizable="false" reorderable="false"/>
                     </columns>
                 </TableView>
             </VBox>

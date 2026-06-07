@@ -9,8 +9,6 @@ package com.gruppo2.musicplaylistmanager.command;
  * un'operazione non invasiva: i controller e i service non cambiano,
  * si implementa soltanto il corpo di {@code undo()} nelle classi concrete.
  * </p>
- * Il metodo {@code undo()} è previsto dall'architettura ma la sua implementazione
- * concreta è rinviata a US-12.
  */
 public interface Command {
 
@@ -20,9 +18,6 @@ public interface Command {
     /**
      * Annulla l'operazione eseguita da {@link #execute()},
      * riportando il Model allo stato precedente.
-     * <p>
-     * TODO: implementare nelle classi concrete in US-12.
-     * </p>
      */
     void undo();
 }

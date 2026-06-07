@@ -5,6 +5,8 @@ import com.gruppo2.musicplaylistmanager.command.CommandHistory;
 import com.gruppo2.musicplaylistmanager.command.RemoveTrackFromLibraryCommand;
 import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.service.LibraryService;
+import com.gruppo2.musicplaylistmanager.service.PlaybackService;
+import com.gruppo2.musicplaylistmanager.service.PlaylistService;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
@@ -12,6 +14,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 
 import java.io.IOException;
@@ -32,6 +35,8 @@ import java.util.Optional;
 public class TrackListController {
 
     private LibraryService   libraryService;
+    private PlaylistService  playlistService;
+    private PlaybackService  playbackService;
     private CommandHistory   commandHistory;
     private TableView<Track> trackTableView;
 
@@ -42,6 +47,21 @@ public class TrackListController {
      */
     public void setLibraryService(LibraryService libraryService) {
         this.libraryService = libraryService;
+    }
+
+    /**
+     * Inietta il servizio delle playlist, necessario a
+     * {@link RemoveTrackFromLibraryCommand} per ripristinare le playlist
+     * in undo senza accedere direttamente al Model.
+     *
+     * @param playlistService servizio condiviso con gli altri controller
+     */
+    public void setPlaylistService(PlaylistService playlistService) {
+        this.playlistService = playlistService;
+    }
+
+    public void setPlaybackService(PlaybackService playbackService) {
+        this.playbackService = playbackService;
     }
 
     /**
@@ -61,6 +81,14 @@ public class TrackListController {
      */
     public void setTrackTableView(TableView<Track> trackTableView) {
         this.trackTableView = trackTableView;
+        final Track[] prevSelected = {null};
+        trackTableView.addEventFilter(MouseEvent.MOUSE_PRESSED,
+            e -> prevSelected[0] = trackTableView.getSelectionModel().getSelectedItem());
+        trackTableView.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+            if (prevSelected[0] != null
+                    && prevSelected[0].equals(trackTableView.getSelectionModel().getSelectedItem()))
+                trackTableView.getSelectionModel().clearSelection();
+        });
     }
 
     /**
@@ -97,7 +125,7 @@ public class TrackListController {
                         duration,
                         genreField.getText().trim(),
                         year);
-                commandHistory.push(new AddTrackToLibraryCommand(libraryService, track));
+                commandHistory.push(new AddTrackToLibraryCommand(libraryService, playbackService, track));
             }
         } catch (NumberFormatException e) {
             showError("Durata e anno devono essere numeri interi.");
@@ -129,7 +157,8 @@ public class TrackListController {
                 "Verrà rimossa anche da tutte le playlist che la contengono.");
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            commandHistory.push(new RemoveTrackFromLibraryCommand(libraryService, selected));
+            if (playbackService != null) playbackService.notifyTrackRemoved(selected);
+            commandHistory.push(new RemoveTrackFromLibraryCommand(libraryService, playlistService, selected));
         }
     }
 
@@ -180,6 +209,15 @@ public class TrackListController {
                         genreField.getText().trim(),
                         year);
                 trackTableView.refresh();
+                // Se la traccia modificata è quella in riproduzione, i binding del NowPlaying
+                // non si aggiornano da soli: la property punta ancora allo stesso riferimento,
+                // quindi JavaFX non rileva il cambiamento. Riassegniamo la property a se stessa
+                // per invalidare i binding; entrambe le set() avvengono nello stesso handler,
+                // prima del prossimo pulse di rendering, quindi non c'è alcun flash visivo.
+                if (playbackService != null && selected.equals(playbackService.currentTrackProperty().get())) {
+                    playbackService.currentTrackProperty().set(null);
+                    playbackService.currentTrackProperty().set(selected);
+                }
             }
         } catch (NumberFormatException e) {
             showError("Durata e anno devono essere numeri interi.");

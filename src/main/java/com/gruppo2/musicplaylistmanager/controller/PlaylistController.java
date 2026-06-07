@@ -9,18 +9,25 @@ import com.gruppo2.musicplaylistmanager.model.Playlist;
 import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.service.PlaybackService;
 import com.gruppo2.musicplaylistmanager.service.PlaylistService;
+import javafx.beans.InvalidationListener;
+import javafx.beans.WeakInvalidationListener;
 import javafx.collections.ListChangeListener;
-import javafx.fxml.FXML;
+import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import java.util.Optional;
@@ -39,6 +46,8 @@ import java.util.Optional;
  * possa essere abilitato in US-12 senza modificare questo controller.
  */
 public class PlaylistController {
+
+    private static final PseudoClass CURRENT = PseudoClass.getPseudoClass("current");
 
     private PlaylistService  playlistService;
     private PlaybackService  playbackService;
@@ -114,9 +123,43 @@ public class PlaylistController {
      * @param listView ListView collegata all'ObservableList della playlist
      */
     public void setPlaylistDetail(VBox pane, Label label, ListView<Track> listView) {
-        this.playlistDetailPane  = pane;
-        this.playlistDetailLabel = label;
+        this.playlistDetailPane    = pane;
+        this.playlistDetailLabel   = label;
         this.playlistTrackListView = listView;
+
+        listView.setCellFactory(view -> new ListCell<>() {
+            private final Button playBtn = new Button("▶");
+            private final InvalidationListener hl = obs -> updateHighlight();
+
+            {
+                playBtn.getStyleClass().add("btn-play-inline");
+                playBtn.setOnAction(e -> {
+                    if (getItem() != null && selectedPlaylist != null)
+                        playbackService.play(selectedPlaylist, getItem());
+                });
+                playbackService.currentTrackProperty()
+                        .addListener(new WeakInvalidationListener(hl));
+            }
+
+            @Override
+            protected void updateItem(Track item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item.toString());
+                    setGraphic(playBtn);
+                }
+                updateHighlight();
+            }
+
+            private void updateHighlight() {
+                Track current = playbackService.currentTrackProperty().get();
+                pseudoClassStateChanged(CURRENT,
+                        !isEmpty() && getItem() != null && getItem().equals(current));
+            }
+        });
     }
 
     /**
@@ -132,7 +175,6 @@ public class PlaylistController {
      * {@link PlaylistService#createPlaylist}. In caso di errore mostra un alert.
      * La lista delle card si aggiorna automaticamente tramite il listener.
      */
-    @FXML
     public void onCreatePlaylist() {
         TextField nameField = new TextField();
         nameField.setPromptText("Nome della playlist");
@@ -162,7 +204,6 @@ public class PlaylistController {
      * Mostra un errore se nessuna playlist è selezionata.
      * La lista delle card si aggiorna automaticamente tramite il listener.
      */
-    @FXML
     public void onDeletePlaylist() {
         if (selectedPlaylist == null) {
             showError("Seleziona una playlist da eliminare.");
@@ -175,6 +216,9 @@ public class PlaylistController {
                 "Eliminare la playlist \"" + selectedPlaylist.getName() + "\"?");
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
+            if (playbackService != null && selectedPlaylist.equals(playbackService.getCurrentPlaylist())) {
+                playbackService.notifyPlaylistRemoved(selectedPlaylist);
+            }
             commandHistory.push(new DeletePlaylistCommand(playlistService, selectedPlaylist));
             selectedPlaylist = null;
         }
@@ -199,7 +243,7 @@ public class PlaylistController {
         }
         try {
             commandHistory.push(
-                    new AddTrackToPlaylistCommand(playlistService, selectedPlaylist, selectedTrack));
+                    new AddTrackToPlaylistCommand(playlistService, playbackService, selectedPlaylist, selectedTrack));
         } catch (IllegalArgumentException ex) {
             showError(ex.getMessage());
         }
@@ -257,17 +301,32 @@ public class PlaylistController {
                 + " -fx-text-fill: #333333; -fx-wrap-text: true;");
         nameLabel.setMaxWidth(98);
 
-        VBox card = new VBox(nameLabel);
+        Button playBtn = new Button("▶");
+        playBtn.getStyleClass().add("btn-play-inline");
+        playBtn.setOnAction(e -> playbackService.play(playlist));
+
+        HBox topBar = new HBox(playBtn);
+        topBar.setAlignment(Pos.TOP_RIGHT);
+
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        VBox card = new VBox(topBar, spacer, nameLabel);
         card.setPrefWidth(110);
         card.setPrefHeight(90);
-        card.setAlignment(Pos.BOTTOM_LEFT);
         card.setStyle(styleCard(false));
 
         card.setOnMouseClicked(e -> {
-            resetAllCards();
-            card.setStyle(styleCard(true));
-            selectedPlaylist = playlist;
-            showPlaylistDetail(playlist);
+            if (playlist.equals(selectedPlaylist)) {
+                card.setStyle(styleCard(false));
+                selectedPlaylist = null;
+                hidePlaylistDetail();
+            } else {
+                resetAllCards();
+                card.setStyle(styleCard(true));
+                selectedPlaylist = playlist;
+                showPlaylistDetail(playlist);
+            }
         });
 
         return card;

@@ -1,9 +1,13 @@
 package com.gruppo2.musicplaylistmanager.service;
 
 import com.gruppo2.musicplaylistmanager.model.Library;
+import com.gruppo2.musicplaylistmanager.model.Playlist;
 import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.util.ValidationUtils;
 import javafx.collections.ObservableList;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Servizio che gestisce la libreria delle tracce musicali.
@@ -99,5 +103,34 @@ public class LibraryService {
      */
     public ObservableList<Track> getAllTracks() {
         return library.getTracks();
+    }
+
+    /**
+     * Reinserisce nella libreria una traccia precedentemente eliminata,
+     * preservandone UUID e dati originali.
+     * Usato da {@link com.gruppo2.musicplaylistmanager.command.RemoveTrackFromLibraryCommand#undo()}
+     * per ripristinare lo stato precedente senza ri-eseguire la validazione di business
+     * (già applicata al momento dell'aggiunta originale).
+     * Non esegue controlli di duplicati: è responsabilità del chiamante
+     * assicurarsi che la traccia non sia già presente.
+     *
+     * @param track traccia da ripristinare
+     */
+    public void restoreTrack(Track track) {
+        library.addTrack(track);
+    }
+
+    /**
+     * Restituisce le playlist della libreria che contengono la traccia indicata.
+     * Usato da {@link com.gruppo2.musicplaylistmanager.command.RemoveTrackFromLibraryCommand#undo()}
+     * per ripristinare la traccia nelle playlist originarie dopo un undo.
+     *
+     * @param track traccia di cui cercare le playlist contenenti
+     * @return lista (snapshot) delle playlist che contengono la traccia
+     */
+    public List<Playlist> getPlaylistsContaining(Track track) {
+        return library.getPlaylists().stream()
+                .filter(p -> p.getTracks().contains(track))
+                .collect(Collectors.toList());
     }
 }

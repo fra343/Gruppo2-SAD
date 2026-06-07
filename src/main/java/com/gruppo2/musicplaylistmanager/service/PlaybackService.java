@@ -23,10 +23,11 @@ import javafx.util.Duration;
  */
 public class PlaybackService {
 
-    // --- Property osservabili 
-    private final ObjectProperty<Track>     currentTrack = new SimpleObjectProperty<>();
-    private final IntegerProperty           elapsed      = new SimpleIntegerProperty(0);
-    private final ObjectProperty<PlayState> state        = new SimpleObjectProperty<>(PlayState.STOPPED);
+    // --- Property osservabili
+    private final ObjectProperty<Track>        currentTrack = new SimpleObjectProperty<>();
+    private final IntegerProperty              elapsed      = new SimpleIntegerProperty(0);
+    private final ObjectProperty<PlayState>    state        = new SimpleObjectProperty<>(PlayState.STOPPED);
+    private final ObjectProperty<PlaybackMode> mode         = new SimpleObjectProperty<>(PlaybackMode.SEQUENTIAL);
 
     // --- Strategy pattern
     private final PlaybackStrategyFactory factory = new PlaybackStrategyFactory();
@@ -92,12 +93,45 @@ public class PlaybackService {
         Track next = strategy.next(currentPlaylist, currentTrack.get());
         if (next == null) {
             timeline.stop();
+            currentTrack.set(null);
             state.set(PlayState.STOPPED);
             elapsed.set(0);
         } else {
             currentTrack.set(next);
             elapsed.set(0);
         }
+    }
+
+    /**
+     * Avvia la riproduzione di una singola traccia.
+     * Crea internamente una playlist temporanea di un solo elemento e la
+     * passa a {@link #play(Playlist)}: in modalità sequenziale la riproduzione
+     * si ferma al termine della traccia; in modalità loop la ripete.
+     *
+     * @param track traccia da riprodurre
+     */
+    public void play(Track track) {
+        Playlist single = new Playlist(track.getTitle());
+        single.addTrack(track);
+        play(single);
+    }
+
+    /**
+     * Avvia la riproduzione di una playlist a partire da una traccia specifica.
+     * Utile quando l'utente vuole iniziare dalla traccia N e proseguire
+     * con le successive secondo la strategia corrente.
+     *
+     * @param playlist  playlist da riprodurre
+     * @param startFrom traccia da cui iniziare (deve essere presente nella playlist)
+     */
+    public void play(Playlist playlist, Track startFrom) {
+        if (!playlist.getTracks().contains(startFrom)) return;
+        timeline.stop();
+        currentPlaylist = playlist;
+        currentTrack.set(startFrom);
+        elapsed.set(0);
+        state.set(PlayState.PLAYING);
+        timeline.play();
     }
 
     /**
@@ -108,6 +142,7 @@ public class PlaybackService {
      * @param mode nuova modalità di riproduzione
      */
     public void setMode(PlaybackMode mode) {
+        this.mode.set(mode);
         strategy = factory.create(mode);
     }
 
@@ -121,6 +156,11 @@ public class PlaybackService {
      * <p>
      * Deve essere invocato <em>prima</em> che la traccia venga rimossa dalla
      * playlist, in modo che la strategia possa calcolarne la posizione corretta.
+     * <p>
+     * Caso limite — modalità loop con playlist da un solo elemento: {@code skip()}
+     * restituisce la stessa traccia (wrap-around), che sta per essere eliminata.
+     * In questo caso viene forzato lo stop per evitare che la riproduzione continui
+     * con una traccia non più presente nella playlist.
      *
      * @param removed traccia che sta per essere rimossa
      */
@@ -128,6 +168,32 @@ public class PlaybackService {
         if (currentPlaylist == null || currentTrack.get() == null) return;
         if (removed.equals(currentTrack.get())) {
             skip();
+            // Se skip() non ha avanzato (es. loop su playlist da 1 traccia),
+            // currentTrack punta ancora alla traccia rimossa: forza lo stop.
+            if (removed.equals(currentTrack.get())) {
+                timeline.stop();
+                currentTrack.set(null);
+                state.set(PlayState.STOPPED);
+                elapsed.set(0);
+            }
+        }
+    }
+
+    /**
+     * Notifica il service che una playlist sta per essere eliminata dalla libreria.
+     * Se la playlist coincide con quella in riproduzione, ferma immediatamente
+     * la riproduzione e azzera lo stato.
+     * Se la playlist è diversa da quella corrente non produce effetti.
+     *
+     * @param removed playlist che sta per essere eliminata
+     */
+    public void notifyPlaylistRemoved(Playlist removed) {
+        if (removed.equals(currentPlaylist)) {
+            timeline.stop();
+            currentPlaylist = null;
+            currentTrack.set(null);
+            state.set(PlayState.STOPPED);
+            elapsed.set(0);
         }
     }
 
@@ -167,6 +233,11 @@ public class PlaybackService {
     public ObjectProperty<PlayState> stateProperty() { return state; }
 
     /**
+     * @return property osservabile della modalità di riproduzione corrente
+     */
+    public ObjectProperty<PlaybackMode> modeProperty() { return mode; }
+
+    /**
      * Chiamato dalla Timeline ogni secondo 
      * Incrementa {@code elapsed} e, quando la traccia corrente è terminata,
      * interroga la strategia per determinare la prossima traccia o ferma la riproduzione.
@@ -181,6 +252,7 @@ public class PlaybackService {
             Track next = strategy.next(currentPlaylist, current);
             if (next == null) {
                 timeline.stop();
+                currentTrack.set(null);
                 state.set(PlayState.STOPPED);
                 elapsed.set(0);
             } else {

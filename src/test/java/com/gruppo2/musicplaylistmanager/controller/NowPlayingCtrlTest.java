@@ -1,10 +1,12 @@
 package com.gruppo2.musicplaylistmanager.controller;
 
+import com.gruppo2.musicplaylistmanager.model.PlayState;
 import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.service.PlaybackService;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import org.junit.jupiter.api.BeforeAll;
@@ -130,6 +132,45 @@ class NowPlayingCtrlTest {
             svc.elapsedProperty().set(15); // oltre la durata della traccia
 
             assertEquals(1.0, ((ProgressBar) root.lookup("#progressBar")).getProgress(), 1e-9);
+        });
+    }
+
+
+    //  US-07a – icona del pulsante play/pausa
+
+    @Test
+    void playPauseButton_showsPlayIcon_whenNotPlaying() throws Exception {
+        runFX(() -> {
+            PlaybackService svc = new PlaybackService();
+            Parent root = loadPanel(svc);
+
+            // Stato iniziale: STOPPED → icona ▶️
+            assertEquals("▶️", ((Button) root.lookup("#playPauseButton")).getText());
+        });
+    }
+
+    @Test
+    void playPauseButton_showsPauseIcon_whenPlaying() throws Exception {
+        runFX(() -> {
+            PlaybackService svc = new PlaybackService();
+            Parent root = loadPanel(svc);
+
+            svc.stateProperty().set(PlayState.PLAYING);
+
+            assertEquals("⏸️", ((Button) root.lookup("#playPauseButton")).getText());
+        });
+    }
+
+    @Test
+    void playPauseButton_showsPlayIcon_whenPaused() throws Exception {
+        runFX(() -> {
+            PlaybackService svc = new PlaybackService();
+            Parent root = loadPanel(svc);
+
+            svc.stateProperty().set(PlayState.PLAYING);
+            svc.stateProperty().set(PlayState.PAUSED);
+
+            assertEquals("▶️", ((Button) root.lookup("#playPauseButton")).getText());
         });
     }
 }

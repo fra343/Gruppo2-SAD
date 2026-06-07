@@ -14,9 +14,9 @@ import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
 import javafx.scene.control.ToggleButton;
 
 import java.util.function.Supplier;
@@ -36,6 +36,7 @@ public class NowPlayingCtrl {
     @FXML private Label        authorLabel;
     @FXML private Label        elapsedLabel;
     @FXML private Label        durationLabel;
+    @FXML private Label        modeLabel;
     @FXML private ProgressBar  progressBar;
     @FXML private Button       playPauseButton;
     @FXML private Button       skipButton;
@@ -93,6 +94,20 @@ public class NowPlayingCtrl {
                     return Math.min(1.0, elapsed.get() / (double) t.getDuration());
                 },
                 elapsed, currentTrack));
+
+        // Icona del pulsante play/pausa: ⏸️ quando in riproduzione, ▶️ altrimenti
+        playPauseButton.textProperty().bind(Bindings.createStringBinding(
+                () -> playbackService.stateProperty().get() == PlayState.PLAYING ? "⏸️" : "▶️",
+                playbackService.stateProperty()));
+
+        // Label modalità attiva: aggiornata automaticamente al cambio di mode
+        modeLabel.textProperty().bind(Bindings.createStringBinding(
+                () -> switch (playbackService.modeProperty().get()) {
+                    case SHUFFLE    -> "Casuale";
+                    case LOOP       -> "Ripeti";
+                    default         -> "Sequenziale";
+                },
+                playbackService.modeProperty()));
     }
 
     /**
@@ -118,47 +133,27 @@ public class NowPlayingCtrl {
     }
 
     /**
-     * Installa sulla {@link ListView} delle tracce della playlist un rendering
-     * personalizzato che evidenzia la riga della traccia attualmente in
-     * riproduzione (US-11).
-     * <p>
-     * Ogni cella osserva la property {@code currentTrack} del
-     * {@link PlaybackService}: a ogni cambio di traccia — manuale (skip) o
-     * automatico (fine traccia) — l'evidenziazione si aggiorna da sé tramite il
-     * binding alle property del service, senza alcuna callback esplicita.
-     * L'evidenziazione attiva la pseudo-classe CSS {@code :current} sulla riga
-     * corrispondente, la cui resa grafica è definita nel foglio di stile.
+     * Installa sulla {@link TableView} della libreria un rendering personalizzato
+     * che evidenzia la riga della traccia attualmente in riproduzione (US-11)
+     * tramite la pseudo-classe CSS {@code "current"} e la row factory di {@link TableRow}.
      *
-     * @param playlistView ListView che mostra le tracce della playlist
+     * @param tableView TableView che mostra le tracce della libreria
      */
-    public void highlightCurrentTrackIn(ListView<Track> playlistView) {
-        playlistView.setCellFactory(view -> new ListCell<>() {
-
-            // Listener forte (mantenuto da questo campo) registrato sulla
-            // property tramite WeakInvalidationListener, così da non impedire
-            // la garbage collection della cella quando non è più in uso.
+    public void highlightCurrentTrackIn(TableView<Track> tableView) {
+        tableView.setRowFactory(tv -> new TableRow<>() {
             private final InvalidationListener highlightListener = obs -> updateHighlight();
-
             {
                 playbackService.currentTrackProperty()
                         .addListener(new WeakInvalidationListener(highlightListener));
             }
-
             @Override
             protected void updateItem(Track item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.toString());
                 updateHighlight();
             }
-
-            /**
-             * Attiva la pseudo-classe {@code :current} se la traccia di questa
-             * cella coincide con quella in riproduzione.
-             */
             private void updateHighlight() {
                 Track current = playbackService.currentTrackProperty().get();
-                boolean isCurrent =
-                        !isEmpty() && getItem() != null && getItem().equals(current);
+                boolean isCurrent = !isEmpty() && getItem() != null && getItem().equals(current);
                 pseudoClassStateChanged(CURRENT, isCurrent);
             }
         });

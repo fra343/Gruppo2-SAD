@@ -8,9 +8,7 @@ import com.gruppo2.musicplaylistmanager.service.PlaylistService;
  * Comando che rimuove una traccia da una playlist.
  * <p>
  * {@link #execute()} delega a {@link PlaylistService#removeTrackFromPlaylist}.
- * {@link #undo()} è lasciato come placeholder non implementato (TODO per US-12):
- * per annullare la rimozione basterà invocare
- * {@link PlaylistService#addTrackToPlaylist} con la stessa traccia.
+ * {@link #undo()} annulla la rimozione reinserendo la traccia nella playlist.
  * </p>
  */
 public class RemoveTrackFromPlaylistCommand implements Command {
@@ -38,14 +36,9 @@ public class RemoveTrackFromPlaylistCommand implements Command {
         playlistService.removeTrackFromPlaylist(playlist, track);
     }
 
-    /**
-     * Annulla la rimozione reinserendo la traccia nella playlist.
-     * <p>
-     * TODO: implementare in US-12.
-     * </p>
-     */
+    /** Annulla la rimozione reinserendo la traccia nella playlist. */
     @Override
     public void undo() {
-        // TODO: implementare in US-12
+        playlistService.restoreTrackToPlaylist(playlist, track);
     }
 }

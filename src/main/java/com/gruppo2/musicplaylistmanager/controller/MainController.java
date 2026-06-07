@@ -8,8 +8,10 @@ import com.gruppo2.musicplaylistmanager.service.PlaybackService;
 import com.gruppo2.musicplaylistmanager.service.PlaylistService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.FlowPane;
@@ -26,8 +28,10 @@ public class MainController {
 
     private final TrackListController trackListController = new TrackListController();
     private final PlaylistController  playlistController  = new PlaylistController();
+    private CommandHistory            commandHistory;
 
     @FXML private NowPlayingCtrl             nowPlayingController;
+    @FXML private Button                     undoButton;
     @FXML private TableView<Track>           trackTableView;
     @FXML private TableColumn<Track, String> titleColumn;
     @FXML private TableColumn<Track, String> authorColumn;
@@ -47,18 +51,21 @@ public class MainController {
      */
     @FXML
     public void initialize() {
-        Library        library        = new Library();
-        CommandHistory commandHistory = new CommandHistory();
+        Library library = new Library();
+        commandHistory  = new CommandHistory();
+        // US-12: il pulsante Annulla è abilitato solo quando c'è qualcosa da annullare.
+        undoButton.disableProperty().bind(commandHistory.canUndoProperty().not());
 
         PlaybackService playbackService = new PlaybackService();
         nowPlayingController.setPlaybackService(playbackService);
         nowPlayingController.setSelectedPlaylistSupplier(playlistController::getSelectedPlaylist);
-        // US-11: evidenziazione della traccia in riproduzione nella lista della playlist.
-        nowPlayingController.highlightCurrentTrackIn(playlistTrackListView);
+        // US-11: evidenziazione nella tabella della libreria (la playlist ListView è gestita da PlaylistController).
+        nowPlayingController.highlightCurrentTrackIn(trackTableView);
         playlistController.setPlaybackService(playbackService);
 
         LibraryService libraryService = new LibraryService(library);
         trackListController.setLibraryService(libraryService);
+        trackListController.setPlaybackService(playbackService);
         trackListController.setCommandHistory(commandHistory);
         trackListController.setTrackTableView(trackTableView);
 
@@ -74,10 +81,33 @@ public class MainController {
             int s = data.getValue().getDuration();
             return new SimpleStringProperty(String.format("%d:%02d", s / 60, s % 60));
         });
+
+        TableColumn<Track, Void> playTrackColumn = new TableColumn<>("");
+        playTrackColumn.setMinWidth(36);
+        playTrackColumn.setPrefWidth(36);
+        playTrackColumn.setMaxWidth(36);
+        playTrackColumn.setResizable(false);
+        playTrackColumn.setReorderable(false);
+        playTrackColumn.setSortable(false);
+        playTrackColumn.setCellFactory(col -> new TableCell<>() {
+            private final Button btn = new Button("▶");
+            {
+                btn.getStyleClass().add("btn-play-inline");
+                btn.setOnAction(e -> playbackService.play(getTableView().getItems().get(getIndex())));
+            }
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : btn);
+            }
+        });
+        trackTableView.getColumns().add(0, playTrackColumn);
+        trackTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         trackTableView.setItems(libraryService.getAllTracks());
 
         PlaylistService playlistService = new PlaylistService(library);
         playlistController.setPlaylistService(playlistService);
+        trackListController.setPlaylistService(playlistService);
         playlistController.setCommandHistory(commandHistory);
         playlistController.setLibraryTableView(trackTableView);
         playlistController.setPlaylistFlowPane(playlistFlowPane);
@@ -101,6 +131,9 @@ public class MainController {
     @FXML
     private void onEditTrackButton() {
         trackListController.onEditTrack();
+        // US-02: la ListView del dettaglio playlist non riceve notifiche di modifica
+        // interna agli oggetti — ObservableList notifica solo add/remove.
+        playlistTrackListView.refresh();
     }
 
     /** Delega la creazione di una playlist a {@link PlaylistController}. */
@@ -125,5 +158,11 @@ public class MainController {
     @FXML
     private void onRemoveFromPlaylistButton() {
         playlistController.onRemoveFromPlaylist();
+    }
+
+    /** Annulla l'ultima operazione eseguita (US-12). */
+    @FXML
+    private void onUndoButton() {
+        commandHistory.undo();
     }
 }

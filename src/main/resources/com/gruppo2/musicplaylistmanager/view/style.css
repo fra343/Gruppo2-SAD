@@ -222,6 +222,16 @@
 .list-cell:filled:current:hover {
     -fx-background-color: #D6E4FA;
 }
+.table-row-cell:filled:current {
+    -fx-background-color: #E3EDFB;
+}
+.table-row-cell:filled:current .table-cell {
+    -fx-text-fill: #2E6FE0;
+    -fx-font-weight: bold;
+}
+.table-row-cell:filled:current:hover {
+    -fx-background-color: #D6E4FA;
+}
 
 /* ============================================================
    PLAYER (barra in basso, piatta)
@@ -271,6 +281,23 @@
 .player-time {
     -fx-font-size: 11px;
     -fx-text-fill: #8A8A90;
+}
+.player-mode-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #8A8A90;
+    -fx-font-style: italic;
+}
+.btn-play-inline {
+    -fx-background-color: transparent;
+    -fx-text-fill: #555555;
+    -fx-font-size: 11px;
+    -fx-padding: 2 4 2 4;
+    -fx-cursor: hand;
+    -fx-background-radius: 4;
+}
+.btn-play-inline:hover {
+    -fx-background-color: #2E6FE0;
+    -fx-text-fill: white;
 }
 .player-slider .track {
     -fx-background-color: #DADADE;

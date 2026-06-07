@@ -5,6 +5,7 @@
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
@@ -36,11 +37,16 @@
 
         <!-- Selettori modalità (destra): shuffle e loop in mutua esclusione.
              Nessuno selezionato = modalità sequenziale (default). -->
-        <HBox prefWidth="220" alignment="CENTER_RIGHT" spacing="14">
+        <HBox prefWidth="220" alignment="CENTER_RIGHT" spacing="10">
+            <Label fx:id="modeLabel" text="Sequenziale" styleClass="player-mode-label"/>
             <ToggleButton fx:id="shuffleButton" text="⇄" styleClass="player-icon"
-                          onAction="#onShuffle" toggleGroup="$modeGroup"/>
+                          onAction="#onShuffle" toggleGroup="$modeGroup">
+                <tooltip><Tooltip text="Modalità casuale (Shuffle)"/></tooltip>
+            </ToggleButton>
             <ToggleButton fx:id="loopButton"    text="↺" styleClass="player-icon"
-                          onAction="#onLoop"    toggleGroup="$modeGroup"/>
+                          onAction="#onLoop"    toggleGroup="$modeGroup">
+                <tooltip><Tooltip text="Ripeti playlist (Loop)"/></tooltip>
+            </ToggleButton>
         </HBox>
 
     </HBox>

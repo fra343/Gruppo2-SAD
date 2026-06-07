@@ -283,6 +283,23 @@ class PlaybackServiceTest {
     //  US-09b – notifyTrackRemoved()
 
     @Test
+    void notifyTrackRemoved_loopSingleTrack_stopsPlaybackImmediately() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Playlist p = playlistWith(t1);
+            PlaybackService svc = new PlaybackService();
+            svc.setMode(PlaybackMode.LOOP);
+            svc.play(p);
+
+            svc.notifyTrackRemoved(t1);
+
+            assertEquals(PlayState.STOPPED, svc.stateProperty().get());
+            assertNull(svc.currentTrackProperty().get());
+            assertEquals(0, svc.elapsedProperty().get());
+        });
+    }
+
+    @Test
     void notifyTrackRemoved_nonCurrentTrack_playbackContinues() throws Exception {
         runFX(() -> {
             Track t1 = track("Song1", 180);
@@ -339,6 +356,105 @@ class PlaybackServiceTest {
 
             assertEquals(PlayState.STOPPED, svc.stateProperty().get());
             assertNull(svc.currentTrackProperty().get());
+        });
+    }
+
+
+    //  notifyPlaylistRemoved()
+
+    @Test
+    void notifyPlaylistRemoved_currentPlaylist_stopsPlayback() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Playlist p = playlistWith(t1);
+            PlaybackService svc = new PlaybackService();
+            svc.play(p);
+
+            svc.notifyPlaylistRemoved(p);
+
+            assertEquals(PlayState.STOPPED, svc.stateProperty().get());
+            assertNull(svc.currentTrackProperty().get());
+            assertEquals(0, svc.elapsedProperty().get());
+            assertNull(svc.getCurrentPlaylist());
+        });
+    }
+
+    @Test
+    void notifyPlaylistRemoved_differentPlaylist_playbackContinues() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Playlist playing = playlistWith(t1);
+            Playlist other   = playlistWith(track("Song2", 200));
+            PlaybackService svc = new PlaybackService();
+            svc.play(playing);
+
+            svc.notifyPlaylistRemoved(other);
+
+            assertEquals(PlayState.PLAYING, svc.stateProperty().get());
+            assertEquals(t1, svc.currentTrackProperty().get());
+        });
+    }
+
+    @Test
+    void notifyPlaylistRemoved_whenStopped_hasNoEffect() throws Exception {
+        runFX(() -> {
+            Playlist p = playlistWith(track("Song1", 180));
+            PlaybackService svc = new PlaybackService();
+
+            svc.notifyPlaylistRemoved(p);
+
+            assertEquals(PlayState.STOPPED, svc.stateProperty().get());
+            assertNull(svc.currentTrackProperty().get());
+        });
+    }
+
+
+    //  US-09a – aggiunta traccia durante la riproduzione
+
+
+    @Test
+    void addTrackDuringPlayback_doesNotInterruptCurrentTrack() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Playlist p = playlistWith(t1);
+            PlaybackService svc = new PlaybackService();
+            svc.play(p);
+
+            p.addTrack(track("Song2", 200));
+
+            assertEquals(t1, svc.currentTrackProperty().get());
+            assertEquals(PlayState.PLAYING, svc.stateProperty().get());
+        });
+    }
+
+    @Test
+    void addTrackDuringPlayback_newTrackReachableViaSkip() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Track t2 = track("Song2", 200);
+            Playlist p = playlistWith(t1);
+            PlaybackService svc = new PlaybackService();
+            svc.play(p);
+
+            p.addTrack(t2);
+            svc.skip();
+
+            assertEquals(t2, svc.currentTrackProperty().get());
+        });
+    }
+
+    @Test
+    void addTrackDuringPlayback_elapsedNotReset() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Playlist p = playlistWith(t1);
+            PlaybackService svc = new PlaybackService();
+            svc.play(p);
+            svc.elapsedProperty().set(30);
+
+            p.addTrack(track("Song2", 200));
+
+            assertEquals(30, svc.elapsedProperty().get());
         });
     }
 
