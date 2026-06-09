@@ -95,7 +95,12 @@ mvn javafx:run
 
 # Solo test
 mvn test
+
+# JavaDoc
+mvn javadoc:javadoc
 ```
+
+> Dopo aver eseguito il comando per la produzione della JavaDoc, tale documentazione verrà salvata nella cartella `target/reports/apidocs/`.
 
 ---
 
