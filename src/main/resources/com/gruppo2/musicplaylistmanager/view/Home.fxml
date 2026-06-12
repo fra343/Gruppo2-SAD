@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gruppo2.musicplaylistmanager.controller.HomeController"
+      stylesheets="@style.css"
+      spacing="0">
+
+    <!-- == COLONNA SINISTRA: Tracce più ascoltate == -->
+    <VBox prefWidth="500" styleClass="panel-left" spacing="12">
+        <padding>
+            <Insets top="20" right="16" bottom="20" left="20"/>
+        </padding>
+
+        <Label text="Tracce più ascoltate" styleClass="panel-title"/>
+        <Label text="Ordinate per numero di riproduzioni" styleClass="panel-subtitle"/>
+
+        <Label fx:id="noTracksLabel"
+               text="Nessuna traccia riprodotta ancora."
+               styleClass="panel-subtitle"
+               visible="true" managed="true"/>
+
+        <ListView fx:id="topTracksListView" VBox.vgrow="ALWAYS">
+            <placeholder>
+                <Label text="Nessuna riproduzione registrata."/>
+            </placeholder>
+        </ListView>
+    </VBox>
+
+    <!-- == COLONNA DESTRA: Playlist più ascoltate == -->
+    <VBox HBox.hgrow="ALWAYS" styleClass="panel-right" spacing="12">
+        <padding>
+            <Insets top="20" right="20" bottom="20" left="20"/>
+        </padding>
+
+        <Label text="Playlist più ascoltate" styleClass="panel-title"/>
+        <Label text="Ordinate per numero di avvii" styleClass="panel-subtitle"/>
+
+        <Label fx:id="noPlaylistsLabel"
+               text="Nessuna playlist avviata ancora."
+               styleClass="panel-subtitle"
+               visible="true" managed="true"/>
+
+        <ListView fx:id="topPlaylistsListView" VBox.vgrow="ALWAYS">
+            <placeholder>
+                <Label text="Nessuna riproduzione registrata."/>
+            </placeholder>
+        </ListView>
+    </VBox>
+
+</HBox>

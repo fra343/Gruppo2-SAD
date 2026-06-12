@@ -6,6 +6,8 @@ import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.util.ValidationUtils;
 import javafx.collections.ObservableList;
 
+import java.util.List;
+
 /**
  * Servizio per la gestione delle playlist.
  * Delega la persistenza in memoria alla {@link Library} condivisa, esattamente
@@ -125,5 +127,27 @@ public class PlaylistService {
      */
     public ObservableList<Playlist> getAllPlaylists() {
         return library.getPlaylists();
+    }
+
+    /**
+     * Crea una nuova playlist con il nome indicato, vi aggiunge tutte le tracce
+     * fornite e la inserisce nella libreria.
+     * Usato dai controller di generazione automatica: ognuno interroga la Library
+     * con {@code findByGenre}/{@code findByYear}/{@code findByTag} e passa il risultato
+     * a questo metodo.
+     *
+     * @param name   nome della playlist da generare
+     * @param tracks tracce ottenute dal criterio di ricerca; non deve essere vuota
+     * @return la nuova playlist aggiunta alla libreria
+     * @throws IllegalArgumentException se la lista di tracce è vuota
+     */
+    public Playlist generateAutoPlaylist(String name, List<Track> tracks) {
+        if (tracks.isEmpty()) {
+            throw new IllegalArgumentException("Nessuna traccia trovata per il criterio selezionato.");
+        }
+        Playlist playlist = new Playlist(name);
+        tracks.forEach(playlist::addTrack);
+        library.addPlaylist(playlist);
+        return playlist;
     }
 }

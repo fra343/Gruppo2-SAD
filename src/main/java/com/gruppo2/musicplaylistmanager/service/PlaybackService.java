@@ -14,6 +14,10 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.util.Duration;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 /**
  * Servizio di riproduzione simulata 
  * Espone le property osservabili {@code currentTrack}, {@code elapsed} e {@code state}
@@ -33,6 +37,10 @@ public class PlaybackService {
     private final PlaybackStrategyFactory factory = new PlaybackStrategyFactory();
     private PlaybackStrategy strategy;
     private Playlist currentPlaylist;
+
+    // --- Conteggio riproduzioni
+    private final Map<UUID, Integer> trackPlayCounts    = new HashMap<>();
+    private final Map<UUID, Integer> playlistPlayCounts = new HashMap<>();
 
     // --- Meccanismo di simulazione
     private final Timeline timeline;
@@ -67,7 +75,10 @@ public class PlaybackService {
 
         timeline.stop();
         currentPlaylist = playlist;
-        currentTrack.set(playlist.getTracks().get(0));
+        incrementPlaylistCount(playlist);
+        Track first = playlist.getTracks().get(0);
+        incrementTrackCount(first);
+        currentTrack.set(first);
         elapsed.set(0);
         state.set(PlayState.PLAYING);
         timeline.play();
@@ -97,6 +108,7 @@ public class PlaybackService {
             state.set(PlayState.STOPPED);
             elapsed.set(0);
         } else {
+            incrementTrackCount(next);
             currentTrack.set(next);
             elapsed.set(0);
         }
@@ -128,6 +140,8 @@ public class PlaybackService {
         if (!playlist.getTracks().contains(startFrom)) return;
         timeline.stop();
         currentPlaylist = playlist;
+        incrementPlaylistCount(playlist);
+        incrementTrackCount(startFrom);
         currentTrack.set(startFrom);
         elapsed.set(0);
         state.set(PlayState.PLAYING);
@@ -204,9 +218,8 @@ public class PlaybackService {
 
     /**
      * Restituisce la posizione (0-based) della traccia attualmente in
-     * riproduzione all'interno della playlist corrente. Costituisce la
-     * determinazione dell'indice corrente su cui si basa l'evidenziazione
-     * della traccia in riproduzione nella vista della playlist (US-11).
+     * riproduzione all'interno della playlist corrente. Usato per evidenziare
+     * la traccia in riproduzione nella vista della playlist.
      *
      * @return indice della traccia corrente nella playlist in riproduzione,
      *         oppure {@code -1} se nessuna traccia è in riproduzione o la
@@ -238,7 +251,37 @@ public class PlaybackService {
     public ObjectProperty<PlaybackMode> modeProperty() { return mode; }
 
     /**
-     * Chiamato dalla Timeline ogni secondo 
+     * Restituisce il numero di volte che la traccia è stata riprodotta nella sessione corrente.
+     *
+     * @param track traccia di cui leggere il conteggio
+     * @return numero di riproduzioni, 0 se la traccia non è mai stata riprodotta
+     */
+    public int getTrackPlayCount(Track track) {
+        return trackPlayCounts.getOrDefault(track.getId(), 0);
+    }
+
+    /**
+     * Restituisce il numero di volte che la playlist è stata avviata nella sessione corrente.
+     *
+     * @param playlist playlist di cui leggere il conteggio
+     * @return numero di avvii, 0 se la playlist non è mai stata avviata
+     */
+    public int getPlaylistPlayCount(Playlist playlist) {
+        return playlistPlayCounts.getOrDefault(playlist.getId(), 0);
+    }
+
+    private void incrementTrackCount(Track track) {
+        if (track != null)
+            trackPlayCounts.merge(track.getId(), 1, Integer::sum);
+    }
+
+    private void incrementPlaylistCount(Playlist playlist) {
+        if (playlist != null)
+            playlistPlayCounts.merge(playlist.getId(), 1, Integer::sum);
+    }
+
+    /**
+     * Chiamato dalla Timeline ogni secondo.
      * Incrementa {@code elapsed} e, quando la traccia corrente è terminata,
      * interroga la strategia per determinare la prossima traccia o ferma la riproduzione.
      */
@@ -256,6 +299,7 @@ public class PlaybackService {
                 state.set(PlayState.STOPPED);
                 elapsed.set(0);
             } else {
+                incrementTrackCount(next);
                 currentTrack.set(next);
                 elapsed.set(0);
             }

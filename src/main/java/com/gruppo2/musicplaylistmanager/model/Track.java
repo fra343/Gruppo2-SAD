@@ -1,5 +1,8 @@
 package com.gruppo2.musicplaylistmanager.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -22,7 +25,7 @@ public class Track {
     private final Set<Tag> tags;
 
     /**
-     * Crea una nuova traccia con i dati forniti.
+     * Crea una nuova traccia con i dati forniti e un UUID generato automaticamente.
      *
      * @param title    titolo del brano (non vuoto)
      * @param author   nome dell'artista (non vuoto)
@@ -38,6 +41,27 @@ public class Track {
         this.genre = genre;
         this.year = year;
         this.tags = new HashSet<>();
+    }
+
+    /**
+     * Ricostruisce una traccia con UUID e tag preesistenti dalla deserializzazione JSON.
+     */
+    @JsonCreator
+    public Track(
+            @JsonProperty("id")       UUID   id,
+            @JsonProperty("title")    String title,
+            @JsonProperty("author")   String author,
+            @JsonProperty("duration") int    duration,
+            @JsonProperty("genre")    String genre,
+            @JsonProperty("year")     int    year,
+            @JsonProperty("tags")     Set<Tag> tags) {
+        this.id       = id != null ? id : UUID.randomUUID();
+        this.title    = title;
+        this.author   = author;
+        this.duration = duration;
+        this.genre    = genre;
+        this.year     = year;
+        this.tags     = tags != null ? new HashSet<>(tags) : new HashSet<>();
     }
 
     /** @return identificatore UUID immutabile della traccia */

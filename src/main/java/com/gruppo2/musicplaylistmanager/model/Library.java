@@ -3,6 +3,9 @@ package com.gruppo2.musicplaylistmanager.model;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * Contenitore globale dell'intera libreria musicale: tracce e playlist.
  * Entrambe le collezioni sono osservabili così che la UI si aggiorni
@@ -49,5 +52,41 @@ public class Library {
     /** Restituisce la lista osservabile delle playlist. */
     public ObservableList<Playlist> getPlaylists() {
         return playlists;
+    }
+
+    /**
+     * Restituisce tutte le tracce il cui genere corrisponde (case-insensitive) a quello fornito.
+     *
+     * @param genre genere musicale da cercare
+     * @return lista (eventualmente vuota) delle tracce trovate
+     */
+    public List<Track> findByGenre(String genre) {
+        return tracks.stream()
+                .filter(t -> t.getGenre().equalsIgnoreCase(genre))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Restituisce tutte le tracce pubblicate nell'anno fornito.
+     *
+     * @param year anno di pubblicazione
+     * @return lista (eventualmente vuota) delle tracce trovate
+     */
+    public List<Track> findByYear(int year) {
+        return tracks.stream()
+                .filter(t -> t.getYear() == year)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Restituisce tutte le tracce che hanno il tag fornito.
+     *
+     * @param tag etichetta visiva da cercare
+     * @return lista (eventualmente vuota) delle tracce trovate
+     */
+    public List<Track> findByTag(Tag tag) {
+        return tracks.stream()
+                .filter(t -> t.getTags().contains(tag))
+                .collect(Collectors.toList());
     }
 }

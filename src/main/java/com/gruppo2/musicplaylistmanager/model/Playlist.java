@@ -1,8 +1,13 @@
 package com.gruppo2.musicplaylistmanager.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -12,6 +17,10 @@ import java.util.UUID;
  * aggiornarsi automaticamente a ogni aggiunta o rimozione.
  * L'uguaglianza è basata sull'UUID: due playlist con lo stesso nome
  * ma create separatamente non sono mai uguali.
+ * <p>
+ * La serializzazione Jackson usa il costruttore annotato con {@link JsonCreator}.
+ * Per la serializzazione, {@link #getTracksForJson()} espone la lista come
+ * {@code List} ordinaria, evitando che Jackson tenti di istanziare {@code ObservableList}.
  */
 public class Playlist {
 
@@ -27,6 +36,21 @@ public class Playlist {
     public Playlist(String name) {
         this.id   = UUID.randomUUID();
         this.name = name;
+    }
+
+    /**
+     * Ricostruisce la playlist con UUID e tracce preesistenti dalla deserializzazione JSON.
+     */
+    @JsonCreator
+    public Playlist(
+            @JsonProperty("id")     UUID        id,
+            @JsonProperty("name")   String      name,
+            @JsonProperty("tracks") List<Track> tracks) {
+        this.id   = id != null ? id : UUID.randomUUID();
+        this.name = name;
+        if (tracks != null) {
+            this.tracks.addAll(tracks);
+        }
     }
 
     /** @return identificatore UUID immutabile della playlist */
@@ -71,7 +95,18 @@ public class Playlist {
      *
      * @return lista osservabile delle tracce
      */
+    @JsonIgnore
     public ObservableList<Track> getTracks() { return tracks; }
+
+    /**
+     * Espone le tracce come {@code List} ordinaria per la serializzazione Jackson.
+     * Usato come getter JSON al posto di {@link #getTracks()} per evitare che
+     * Jackson tenti di istanziare {@code ObservableList} durante la deserializzazione.
+     *
+     * @return copia snapshot delle tracce come ArrayList
+     */
+    @JsonProperty("tracks")
+    public List<Track> getTracksForJson() { return new ArrayList<>(tracks); }
 
     /**
      * Due playlist sono uguali se e solo se condividono lo stesso UUID.
