@@ -23,7 +23,7 @@ class PlaylistCommandTest {
 
     @BeforeEach
     void setUp() {
-        playlistService = new PlaylistService(new Library());
+        playlistService = new PlaylistService(new Library(), null);
         playlistService.createPlaylist("Test");
         playlist = playlistService.getAllPlaylists().get(0);
         track    = new Track("Title", "Author", 180, "Pop", 2000);

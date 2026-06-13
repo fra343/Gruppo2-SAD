@@ -3,9 +3,11 @@ package com.gruppo2.musicplaylistmanager.service;
 import com.gruppo2.musicplaylistmanager.model.Library;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
 import com.gruppo2.musicplaylistmanager.model.Track;
+import com.gruppo2.musicplaylistmanager.persistence.TrackDAO;
 import com.gruppo2.musicplaylistmanager.util.ValidationUtils;
 import javafx.collections.ObservableList;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,15 +18,20 @@ import java.util.stream.Collectors;
  */
 public class LibraryService {
 
-    private final Library library;
+    private final Library  library;
+    private final TrackDAO trackDAO;
 
     /**
-     * Crea il servizio legandolo alla libreria indicata.
+     * Crea il servizio legandolo alla libreria e al DAO per la persistenza delle tracce.
+     * Passare {@code null} come {@code trackDAO} disabilita la persistenza (utile nei test
+     * che coprono solo la logica di business).
      *
-     * @param library istanza condivisa della libreria
+     * @param library  istanza condivisa della libreria
+     * @param trackDAO implementazione DAO per la persistenza su disco; può essere {@code null}
      */
-    public LibraryService(Library library) {
-        this.library = library;
+    public LibraryService(Library library, TrackDAO trackDAO) {
+        this.library  = library;
+        this.trackDAO = trackDAO;
     }
 
     /**
@@ -156,5 +163,29 @@ public class LibraryService {
         return library.getPlaylists().stream()
                 .filter(p -> p.getTracks().contains(track))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Carica le tracce dal DAO e le aggiunge alla libreria.
+     * Deve essere invocato all'avvio dell'applicazione, prima di {@link
+     * com.gruppo2.musicplaylistmanager.service.PlaylistService#load()},
+     * in modo che le istanze di traccia siano già presenti nella libreria
+     * quando PlaylistService risolve i riferimenti embedded nelle playlist.
+     * Se il DAO non è stato fornito (es. nei test) il metodo non produce effetti.
+     */
+    public void load() {
+        if (trackDAO == null) return;
+        trackDAO.load().forEach(library::addTrack);
+    }
+
+    /**
+     * Persiste su disco la lista corrente di tracce della libreria tramite il DAO.
+     * Invocato alla chiusura dell'applicazione tramite {@link
+     * com.gruppo2.musicplaylistmanager.controller.MainController#saveAll()}.
+     * Se il DAO non è stato fornito (es. nei test) il metodo non produce effetti.
+     */
+    public void save() {
+        if (trackDAO == null) return;
+        trackDAO.save(new ArrayList<>(library.getTracks()));
     }
 }

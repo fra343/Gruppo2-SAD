@@ -24,8 +24,8 @@ class LibraryCommandTest {
     @BeforeEach
     void setUp() {
         library        = new Library();
-        libraryService  = new LibraryService(library);
-        playlistService = new PlaylistService(library);
+        libraryService  = new LibraryService(library, null);
+        playlistService = new PlaylistService(library, null);
         track = new Track("Title", "Author", 180, "Pop", 2000);
     }
 
@@ -118,8 +118,8 @@ class LibraryCommandTest {
     @Test
     void removeTrackCommandUndo_restoresTrackToAffectedPlaylist() {
         Library lib = new Library();
-        LibraryService svc = new LibraryService(lib);
-        PlaylistService ps  = new PlaylistService(lib);
+        LibraryService svc = new LibraryService(lib, null);
+        PlaylistService ps  = new PlaylistService(lib, null);
         svc.addTrack(track);
         Playlist playlist = new Playlist("Rock");
         playlist.addTrack(track);
@@ -137,8 +137,8 @@ class LibraryCommandTest {
     @Test
     void removeTrackCommandUndo_doesNotRestoreToUnaffectedPlaylist() {
         Library lib = new Library();
-        LibraryService svc = new LibraryService(lib);
-        PlaylistService ps  = new PlaylistService(lib);
+        LibraryService svc = new LibraryService(lib, null);
+        PlaylistService ps  = new PlaylistService(lib, null);
         Track other = new Track("Other", "Artist", 120, "Pop", 2010);
         svc.addTrack(track);
         svc.addTrack(other);

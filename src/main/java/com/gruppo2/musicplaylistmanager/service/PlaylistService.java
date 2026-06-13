@@ -3,10 +3,15 @@ package com.gruppo2.musicplaylistmanager.service;
 import com.gruppo2.musicplaylistmanager.model.Library;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
 import com.gruppo2.musicplaylistmanager.model.Track;
+import com.gruppo2.musicplaylistmanager.persistence.PlaylistDAO;
 import com.gruppo2.musicplaylistmanager.util.ValidationUtils;
 import javafx.collections.ObservableList;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Servizio per la gestione delle playlist.
@@ -16,15 +21,20 @@ import java.util.List;
  */
 public class PlaylistService {
 
-    private final Library library;
+    private final Library     library;
+    private final PlaylistDAO playlistDAO;
 
     /**
-     * Crea il servizio legandolo alla libreria indicata.
+     * Crea il servizio legandolo alla libreria e al DAO per la persistenza delle playlist.
+     * Passare {@code null} come {@code playlistDAO} disabilita la persistenza (utile nei test
+     * che coprono solo la logica di business).
      *
-     * @param library istanza condivisa della libreria
+     * @param library     istanza condivisa della libreria
+     * @param playlistDAO implementazione DAO per la persistenza su disco; può essere {@code null}
      */
-    public PlaylistService(Library library) {
-        this.library = library;
+    public PlaylistService(Library library, PlaylistDAO playlistDAO) {
+        this.library     = library;
+        this.playlistDAO = playlistDAO;
     }
 
     /**
@@ -161,5 +171,39 @@ public class PlaylistService {
         tracks.forEach(playlist::addTrack);
         library.addPlaylist(playlist);
         return playlist;
+    }
+
+    /**
+     * Carica le playlist dal DAO, risolve i riferimenti alle tracce verso le istanze
+     * già presenti nella libreria (per garantire che edit e rimozioni si propaghino
+     * ovunque), e le aggiunge alla libreria.
+     * Deve essere invocato all'avvio <em>dopo</em> {@link
+     * com.gruppo2.musicplaylistmanager.service.LibraryService#load()}, così che la
+     * libreria contenga già le tracce necessarie per la risoluzione dei riferimenti.
+     * Se il DAO non è stato fornito (es. nei test) il metodo non produce effetti.
+     */
+    public void load() {
+        if (playlistDAO == null) return;
+        Map<UUID, Track> trackById = library.getTracks().stream()
+                .collect(Collectors.toMap(Track::getId, t -> t));
+        for (Playlist pl : playlistDAO.load()) {
+            List<Track> snapshot = new ArrayList<>(pl.getTracks());
+            pl.getTracks().setAll(
+                    snapshot.stream()
+                            .map(t -> trackById.getOrDefault(t.getId(), t))
+                            .collect(Collectors.toList()));
+            library.addPlaylist(pl);
+        }
+    }
+
+    /**
+     * Persiste su disco la lista corrente di playlist della libreria tramite il DAO.
+     * Invocato alla chiusura dell'applicazione tramite {@link
+     * com.gruppo2.musicplaylistmanager.controller.MainController#saveAll()}.
+     * Se il DAO non è stato fornito (es. nei test) il metodo non produce effetti.
+     */
+    public void save() {
+        if (playlistDAO == null) return;
+        playlistDAO.save(new ArrayList<>(library.getPlaylists()));
     }
 }

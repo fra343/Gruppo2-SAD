@@ -18,7 +18,7 @@ class PlaylistServiceTest {
 
     @BeforeEach
     void setUp() {
-        playlistService = new PlaylistService(new Library());
+        playlistService = new PlaylistService(new Library(), null);
     }
 
     // CreatePlaylist 

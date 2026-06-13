@@ -22,7 +22,7 @@ class LibraryServiceTest {
     @BeforeEach
     void setUp() {
         library = new Library();
-        libraryService = new LibraryService(library);
+        libraryService = new LibraryService(library, null);
     }
 
     // addTrack: caso nominale 

@@ -3,6 +3,10 @@ package com.gruppo2.musicplaylistmanager.controller;
 import com.gruppo2.musicplaylistmanager.command.CommandHistory;
 import com.gruppo2.musicplaylistmanager.model.Library;
 import com.gruppo2.musicplaylistmanager.model.Track;
+import com.gruppo2.musicplaylistmanager.persistence.JsonPlaylistDAO;
+import com.gruppo2.musicplaylistmanager.persistence.JsonTrackDAO;
+import com.gruppo2.musicplaylistmanager.persistence.PlaylistDAO;
+import com.gruppo2.musicplaylistmanager.persistence.TrackDAO;
 import com.gruppo2.musicplaylistmanager.service.LibraryService;
 import com.gruppo2.musicplaylistmanager.service.PlaybackService;
 import com.gruppo2.musicplaylistmanager.service.PlaylistService;
@@ -31,6 +35,11 @@ public class MainController {
     private final TrackListController trackListController = new TrackListController();
     private final PlaylistController  playlistController  = new PlaylistController();
     private CommandHistory            commandHistory;
+
+    // Campi necessari per la persistenza (US-18a/18b): i service ricevono i DAO e
+    // sono gli unici responsabili del caricamento/salvataggio.
+    private LibraryService  libraryService;
+    private PlaylistService playlistService;
 
     @FXML private NowPlayingCtrl             nowPlayingController;
     @FXML private HomeController             homeController;
@@ -68,7 +77,9 @@ public class MainController {
         nowPlayingController.highlightCurrentTrackIn(trackTableView);
         playlistController.setPlaybackService(playbackService);
 
-        LibraryService libraryService = new LibraryService(library);
+        TrackDAO    trackDAO    = new JsonTrackDAO();
+        PlaylistDAO playlistDAO = new JsonPlaylistDAO();
+        this.libraryService = new LibraryService(library, trackDAO);
         trackListController.setLibraryService(libraryService);
         trackListController.setPlaybackService(playbackService);
         trackListController.setCommandHistory(commandHistory);
@@ -110,7 +121,7 @@ public class MainController {
         trackTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         trackTableView.setItems(libraryService.getAllTracks());
 
-        PlaylistService playlistService = new PlaylistService(library);
+        this.playlistService = new PlaylistService(library, playlistDAO);
         playlistController.setPlaylistService(playlistService);
         playlistController.setLibraryService(libraryService);
         trackListController.setPlaylistService(playlistService);
@@ -125,7 +136,23 @@ public class MainController {
         // con la freccia "↩", la cui logica di navigazione resta qui.
         homeController.setDependencies(library, playbackService);
         homeController.setOnBackToLibrary(this::showLibraryView);
+
+        // US-18b: i service caricano lo stato persistente tramite i rispettivi DAO.
+        // LibraryService.load() deve precedere PlaylistService.load() perché il secondo
+        // risolve i riferimenti alle tracce embedded contro le istanze già in libreria.
+        libraryService.load();
+        playlistService.load();
+
         showLibraryView();
+    }
+
+    /**
+     * Delega il salvataggio su disco a {@link LibraryService} e {@link PlaylistService}
+     * tramite i rispettivi DAO. Invocato dall'evento di chiusura della Stage (US-18a).
+     */
+    public void saveAll() {
+        libraryService.save();
+        playlistService.save();
     }
 
     /**
