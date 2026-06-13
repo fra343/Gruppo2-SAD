@@ -292,4 +292,54 @@ class PlaylistCommandTest {
         history.undo();
         assertTrue(history.canUndoProperty().get());
     }
+
+    //  MoveTrackCommand
+
+    private Playlist playlistWithTracks() {
+        Track t1 = new Track("A", "x", 100, "Pop", 2000);
+        Track t2 = new Track("B", "x", 100, "Pop", 2001);
+        Track t3 = new Track("C", "x", 100, "Pop", 2002);
+        playlistService.addTrackToPlaylist(playlist, t1);
+        playlistService.addTrackToPlaylist(playlist, t2);
+        playlistService.addTrackToPlaylist(playlist, t3);
+        return playlist;
+    }
+
+    @Test
+    void moveCommandExecute_changesOrder() {
+        Playlist p = playlistWithTracks();
+        Track originalFirst = p.getTracks().get(0);
+
+        new MoveTrackCommand(playlistService, p, 0, 2).execute();
+
+        assertEquals(originalFirst, p.getTracks().get(2));
+    }
+
+    @Test
+    void moveCommandUndo_restoresOriginalOrder() {
+        Playlist p = playlistWithTracks();
+        Track t1 = p.getTracks().get(0);
+        Track t2 = p.getTracks().get(1);
+        Track t3 = p.getTracks().get(2);
+
+        MoveTrackCommand cmd = new MoveTrackCommand(playlistService, p, 0, 2);
+        cmd.execute();
+        cmd.undo();
+
+        assertEquals(t1, p.getTracks().get(0));
+        assertEquals(t2, p.getTracks().get(1));
+        assertEquals(t3, p.getTracks().get(2));
+    }
+
+    @Test
+    void moveCommandViaHistory_undoRestoresOrder() {
+        Playlist p = playlistWithTracks();
+        Track originalFirst = p.getTracks().get(0);
+        CommandHistory history = new CommandHistory();
+
+        history.push(new MoveTrackCommand(playlistService, p, 0, 2));
+        history.undo();
+
+        assertEquals(originalFirst, p.getTracks().get(0));
+    }
 }

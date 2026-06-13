@@ -219,4 +219,72 @@ class PlaylistServiceTest {
         Playlist p = firstPlaylist("Jazz");
         assertDoesNotThrow(() -> playlistService.removeTrackFromPlaylist(p, validTrack()));
     }
+
+    // moveTrack
+
+    @Test
+    void moveTrack_firstToLast_updatesOrder() {
+        Playlist p = firstPlaylist("Rock");
+        Track t1 = new Track("A", "x", 100, "Pop", 2000);
+        Track t2 = new Track("B", "x", 100, "Pop", 2001);
+        Track t3 = new Track("C", "x", 100, "Pop", 2002);
+        playlistService.addTrackToPlaylist(p, t1);
+        playlistService.addTrackToPlaylist(p, t2);
+        playlistService.addTrackToPlaylist(p, t3);
+
+        playlistService.moveTrack(p, 0, 2);
+
+        assertEquals(t2, p.getTracks().get(0));
+        assertEquals(t3, p.getTracks().get(1));
+        assertEquals(t1, p.getTracks().get(2));
+    }
+
+    @Test
+    void moveTrack_lastToFirst_updatesOrder() {
+        Playlist p = firstPlaylist("Rock");
+        Track t1 = new Track("A", "x", 100, "Pop", 2000);
+        Track t2 = new Track("B", "x", 100, "Pop", 2001);
+        Track t3 = new Track("C", "x", 100, "Pop", 2002);
+        playlistService.addTrackToPlaylist(p, t1);
+        playlistService.addTrackToPlaylist(p, t2);
+        playlistService.addTrackToPlaylist(p, t3);
+
+        playlistService.moveTrack(p, 2, 0);
+
+        assertEquals(t3, p.getTracks().get(0));
+        assertEquals(t1, p.getTracks().get(1));
+        assertEquals(t2, p.getTracks().get(2));
+    }
+
+    @Test
+    void moveTrack_sameIndex_doesNotChangeOrder() {
+        Playlist p = firstPlaylist("Rock");
+        Track t1 = new Track("A", "x", 100, "Pop", 2000);
+        Track t2 = new Track("B", "x", 100, "Pop", 2001);
+        playlistService.addTrackToPlaylist(p, t1);
+        playlistService.addTrackToPlaylist(p, t2);
+
+        playlistService.moveTrack(p, 0, 0);
+
+        assertEquals(t1, p.getTracks().get(0));
+        assertEquals(t2, p.getTracks().get(1));
+    }
+
+    @Test
+    void moveTrack_preservesAllTracks() {
+        Playlist p = firstPlaylist("Rock");
+        Track t1 = new Track("A", "x", 100, "Pop", 2000);
+        Track t2 = new Track("B", "x", 100, "Pop", 2001);
+        Track t3 = new Track("C", "x", 100, "Pop", 2002);
+        playlistService.addTrackToPlaylist(p, t1);
+        playlistService.addTrackToPlaylist(p, t2);
+        playlistService.addTrackToPlaylist(p, t3);
+
+        playlistService.moveTrack(p, 0, 2);
+
+        assertEquals(3, p.getTracks().size());
+        assertTrue(p.getTracks().contains(t1));
+        assertTrue(p.getTracks().contains(t2));
+        assertTrue(p.getTracks().contains(t3));
+    }
 }

@@ -4,6 +4,7 @@ import com.gruppo2.musicplaylistmanager.command.AddTrackToPlaylistCommand;
 import com.gruppo2.musicplaylistmanager.command.CommandHistory;
 import com.gruppo2.musicplaylistmanager.command.CreatePlaylistCommand;
 import com.gruppo2.musicplaylistmanager.command.DeletePlaylistCommand;
+import com.gruppo2.musicplaylistmanager.command.MoveTrackCommand;
 import com.gruppo2.musicplaylistmanager.command.RemoveTrackFromPlaylistCommand;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
 import com.gruppo2.musicplaylistmanager.model.Track;
@@ -247,6 +248,34 @@ public class PlaylistController {
         } catch (IllegalArgumentException ex) {
             showError(ex.getMessage());
         }
+    }
+
+    /**
+     * Sposta verso l'alto (indice - 1) la traccia selezionata nella ListView.
+     * Non produce effetti se la traccia è già in prima posizione o nessuna è selezionata.
+     */
+    public void onMoveUp() {
+        if (selectedPlaylist == null) return;
+        Track selected = playlistTrackListView.getSelectionModel().getSelectedItem();
+        if (selected == null) return;
+        int idx = selectedPlaylist.getTracks().indexOf(selected);
+        if (idx <= 0) return;
+        commandHistory.push(new MoveTrackCommand(playlistService, selectedPlaylist, idx, idx - 1));
+        playlistTrackListView.getSelectionModel().select(idx - 1);
+    }
+
+    /**
+     * Sposta verso il basso (indice + 1) la traccia selezionata nella ListView.
+     * Non produce effetti se la traccia è già in ultima posizione o nessuna è selezionata.
+     */
+    public void onMoveDown() {
+        if (selectedPlaylist == null) return;
+        Track selected = playlistTrackListView.getSelectionModel().getSelectedItem();
+        if (selected == null) return;
+        int idx = selectedPlaylist.getTracks().indexOf(selected);
+        if (idx < 0 || idx >= selectedPlaylist.getTracks().size() - 1) return;
+        commandHistory.push(new MoveTrackCommand(playlistService, selectedPlaylist, idx, idx + 1));
+        playlistTrackListView.getSelectionModel().select(idx + 1);
     }
 
     /**

@@ -130,6 +130,18 @@ public class PlaylistService {
     }
 
     /**
+     * Sposta la traccia alla posizione {@code fromIndex} alla posizione {@code toIndex}
+     * nella playlist indicata. La UI si aggiorna automaticamente tramite l'ObservableList.
+     *
+     * @param playlist  playlist su cui operare
+     * @param fromIndex posizione corrente della traccia (0-based)
+     * @param toIndex   posizione di destinazione (0-based)
+     */
+    public void moveTrack(Playlist playlist, int fromIndex, int toIndex) {
+        playlist.moveTrack(fromIndex, toIndex);
+    }
+
+    /**
      * Crea una nuova playlist con il nome indicato, vi aggiunge tutte le tracce
      * fornite e la inserisce nella libreria.
      * Usato dai controller di generazione automatica: ognuno interroga la Library

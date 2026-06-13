@@ -508,4 +508,57 @@ class PlaybackServiceTest {
             assertEquals(0, svc.getCurrentIndex());
         });
     }
+
+
+    //  US-17 – riordino durante la riproduzione
+
+    @Test
+    void reorder_currentTrackNotInterrupted() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Track t2 = track("Song2", 200);
+            Track t3 = track("Song3", 220);
+            Playlist p = playlistWith(t1, t2, t3);
+
+            PlaybackService svc = new PlaybackService();
+            svc.play(p);                     // currentTrack = t1 (indice 0)
+            p.moveTrack(0, 2);               // t1 si sposta in ultima posizione
+
+            assertEquals(t1, svc.currentTrackProperty().get());
+            assertEquals(PlayState.PLAYING, svc.stateProperty().get());
+        });
+    }
+
+    @Test
+    void reorder_currentIndex_updatesAfterMove() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Track t2 = track("Song2", 200);
+            Track t3 = track("Song3", 220);
+            Playlist p = playlistWith(t1, t2, t3);
+
+            PlaybackService svc = new PlaybackService();
+            svc.play(p);                     // currentTrack = t1 a indice 0
+            p.moveTrack(0, 2);               // t1 ora è all'indice 2
+
+            assertEquals(2, svc.getCurrentIndex());
+        });
+    }
+
+    @Test
+    void reorder_nonCurrentTrack_doesNotAffectCurrentIndex() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Track t2 = track("Song2", 200);
+            Track t3 = track("Song3", 220);
+            Playlist p = playlistWith(t1, t2, t3);
+
+            PlaybackService svc = new PlaybackService();
+            svc.play(p);                     // currentTrack = t1 a indice 0
+            p.moveTrack(1, 2);               // sposta t2 in fondo, t1 rimane a indice 0
+
+            assertEquals(t1, svc.currentTrackProperty().get());
+            assertEquals(0, svc.getCurrentIndex());
+        });
+    }
 }

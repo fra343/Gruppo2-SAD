@@ -110,9 +110,17 @@
                            text="Tracce nella playlist"
                            styleClass="detail-title"/>
                     <ListView fx:id="playlistTrackListView" prefHeight="160"/>
-                    <Button text="Rimuovi dalla playlist"
-                            onAction="#onRemoveFromPlaylistButton"
-                            styleClass="btn, btn-danger"/>
+                    <HBox spacing="8">
+                        <Button text="▲ "
+                                onAction="#onMoveUpButton"
+                                styleClass="btn"/>
+                        <Button text="▼ "
+                                onAction="#onMoveDownButton"
+                                styleClass="btn"/>
+                        <Button text="Rimuovi dalla playlist"
+                                onAction="#onRemoveFromPlaylistButton"
+                                styleClass="btn, btn-danger"/>
+                    </HBox>
                 </VBox>
 
             </VBox>

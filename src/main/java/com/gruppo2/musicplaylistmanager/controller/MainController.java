@@ -160,6 +160,18 @@ public class MainController {
         playlistController.onRemoveFromPlaylist();
     }
 
+    /** Sposta verso l'alto la traccia selezionata nella playlist. */
+    @FXML
+    private void onMoveUpButton() {
+        playlistController.onMoveUp();
+    }
+
+    /** Sposta verso il basso la traccia selezionata nella playlist. */
+    @FXML
+    private void onMoveDownButton() {
+        playlistController.onMoveDown();
+    }
+
     /** Annulla l'ultima operazione eseguita (US-12). */
     @FXML
     private void onUndoButton() {

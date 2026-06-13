@@ -79,6 +79,22 @@ public class Playlist {
     }
 
     /**
+     * Sposta la traccia dalla posizione {@code fromIndex} alla posizione {@code toIndex}.
+     * Entrambi gli indici devono essere validi; se sono uguali il metodo non produce effetti.
+     * Poiché la lista è un'ObservableList, la UI si aggiorna automaticamente.
+     *
+     * @param fromIndex posizione corrente della traccia (0-based)
+     * @param toIndex   posizione di destinazione (0-based)
+     */
+    public void moveTrack(int fromIndex, int toIndex) {
+        if (fromIndex == toIndex) return;
+        if (fromIndex < 0 || fromIndex >= tracks.size()) return;
+        if (toIndex   < 0 || toIndex   >= tracks.size()) return;
+        Track t = tracks.remove(fromIndex);
+        tracks.add(toIndex, t);
+    }
+
+    /**
      * Rimuove una traccia dalla playlist.
      *
      * @param track traccia da rimuovere
