@@ -363,4 +363,48 @@ class LibraryServiceTest {
         assertDoesNotThrow(() -> libraryService.removeTrack(t));
     }
 
+    // US-14a / US-14b: ricerca per genere e anno (generazione automatica di playlist)
+
+    @Test
+    void findByGenreReturnsMatchingTracks() {
+        Track rock1 = new Track("A", "x", 100, "Rock", 2000);
+        Track rock2 = new Track("B", "x", 100, "Rock", 2001);
+        libraryService.addTrack(rock1);
+        libraryService.addTrack(rock2);
+        libraryService.addTrack(new Track("C", "x", 100, "Pop", 2000));
+        assertEquals(2, libraryService.findByGenre("Rock").size());
+        assertTrue(libraryService.findByGenre("Rock").contains(rock1));
+        assertTrue(libraryService.findByGenre("Rock").contains(rock2));
+    }
+
+    @Test
+    void findByGenreIsCaseInsensitive() {
+        libraryService.addTrack(new Track("A", "x", 100, "Rock", 2000));
+        assertEquals(1, libraryService.findByGenre("rock").size());
+    }
+
+    @Test
+    void findByGenreNoMatchReturnsEmpty() {
+        libraryService.addTrack(new Track("A", "x", 100, "Rock", 2000));
+        assertTrue(libraryService.findByGenre("Jazz").isEmpty());
+    }
+
+    @Test
+    void findByYearReturnsMatchingTracks() {
+        Track y2000a = new Track("A", "x", 100, "Rock", 2000);
+        Track y2000b = new Track("B", "x", 100, "Pop", 2000);
+        libraryService.addTrack(y2000a);
+        libraryService.addTrack(y2000b);
+        libraryService.addTrack(new Track("C", "x", 100, "Jazz", 2001));
+        assertEquals(2, libraryService.findByYear(2000).size());
+        assertTrue(libraryService.findByYear(2000).contains(y2000a));
+        assertTrue(libraryService.findByYear(2000).contains(y2000b));
+    }
+
+    @Test
+    void findByYearNoMatchReturnsEmpty() {
+        libraryService.addTrack(new Track("A", "x", 100, "Rock", 2000));
+        assertTrue(libraryService.findByYear(1999).isEmpty());
+    }
+
 }

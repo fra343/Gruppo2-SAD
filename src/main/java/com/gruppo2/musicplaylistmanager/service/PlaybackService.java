@@ -14,9 +14,13 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.util.Duration;
 
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Servizio di riproduzione simulata 
@@ -268,6 +272,43 @@ public class PlaybackService {
      */
     public int getPlaylistPlayCount(Playlist playlist) {
         return playlistPlayCounts.getOrDefault(playlist.getId(), 0);
+    }
+
+    /**
+     * Restituisce <em>tutte</em> le tracce fornite ordinate per numero di
+     * riproduzioni decrescente; le tracce mai riprodotte restano in coda,
+     * preservando l'ordine d'ingresso (ordinamento stabile).
+     * <p>
+     * Alimenta il blocco "Top Tracks" della home page (US-13), che elenca le
+     * tracce generali della libreria mettendo in cima le più ascoltate. La
+     * logica è esposta sul service anziché nel controller così da essere
+     * testabile senza avviare la UI JavaFX.
+     *
+     * @param tracks tracce candidate (tipicamente l'intera libreria)
+     * @return nuova lista con tutte le tracce ordinate per conteggio decrescente
+     */
+    public List<Track> getTracksByPlayCountDesc(Collection<Track> tracks) {
+        return tracks.stream()
+                .sorted(Comparator.comparingInt(this::getTrackPlayCount).reversed())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Restituisce le playlist fornite ordinate per numero di avvii decrescente,
+     * escludendo quelle mai avviate nella sessione corrente (conteggio pari a 0).
+     * <p>
+     * Logica di ordinamento della home page (US-13): è esposta sul service anziché
+     * nel controller così da essere testabile senza avviare la UI JavaFX.
+     *
+     * @param playlists playlist candidate (tipicamente tutte quelle della libreria)
+     * @return nuova lista ordinata per conteggio decrescente, vuota se nessuna
+     *         playlist è mai stata avviata
+     */
+    public List<Playlist> getMostPlayedPlaylists(Collection<Playlist> playlists) {
+        return playlists.stream()
+                .filter(p -> getPlaylistPlayCount(p) > 0)
+                .sorted(Comparator.comparingInt(this::getPlaylistPlayCount).reversed())
+                .collect(Collectors.toList());
     }
 
     private void incrementTrackCount(Track track) {

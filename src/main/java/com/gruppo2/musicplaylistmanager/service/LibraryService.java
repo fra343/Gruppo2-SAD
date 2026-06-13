@@ -106,6 +106,30 @@ public class LibraryService {
     }
 
     /**
+     * Restituisce le tracce della libreria del genere indicato, delegando a
+     * {@link Library#findByGenre(String)} (confronto case-insensitive).
+     * Usato dalla generazione automatica di playlist per genere (US-14a).
+     *
+     * @param genre genere musicale da cercare
+     * @return lista (eventualmente vuota) delle tracce corrispondenti
+     */
+    public List<Track> findByGenre(String genre) {
+        return library.findByGenre(genre);
+    }
+
+    /**
+     * Restituisce le tracce della libreria pubblicate nell'anno indicato,
+     * delegando a {@link Library#findByYear(int)}.
+     * Usato dalla generazione automatica di playlist per anno (US-14b).
+     *
+     * @param year anno di pubblicazione
+     * @return lista (eventualmente vuota) delle tracce corrispondenti
+     */
+    public List<Track> findByYear(int year) {
+        return library.findByYear(year);
+    }
+
+    /**
      * Reinserisce nella libreria una traccia precedentemente eliminata,
      * preservandone UUID e dati originali.
      * Usato da {@link com.gruppo2.musicplaylistmanager.command.RemoveTrackFromLibraryCommand#undo()}

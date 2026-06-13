@@ -15,6 +15,8 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 /**
@@ -31,6 +33,9 @@ public class MainController {
     private CommandHistory            commandHistory;
 
     @FXML private NowPlayingCtrl             nowPlayingController;
+    @FXML private HomeController             homeController;
+    @FXML private HBox                       mainView;
+    @FXML private VBox                       home;
     @FXML private Button                     undoButton;
     @FXML private TableView<Track>           trackTableView;
     @FXML private TableColumn<Track, String> titleColumn;
@@ -107,12 +112,43 @@ public class MainController {
 
         PlaylistService playlistService = new PlaylistService(library);
         playlistController.setPlaylistService(playlistService);
+        playlistController.setLibraryService(libraryService);
         trackListController.setPlaylistService(playlistService);
         playlistController.setCommandHistory(commandHistory);
         playlistController.setLibraryTableView(trackTableView);
         playlistController.setPlaylistFlowPane(playlistFlowPane);
         playlistController.setPlaylistDetail(
                 playlistDetailPane, playlistDetailLabel, playlistTrackListView);
+
+        // US-13: Home page sovrapposta alla vista principale nello StackPane.
+        // Parte nascosta; l'utente la apre col pulsante "Home" e torna indietro
+        // con la freccia "↩", la cui logica di navigazione resta qui.
+        homeController.setDependencies(library, playbackService);
+        homeController.setOnBackToLibrary(this::showLibraryView);
+        showLibraryView();
+    }
+
+    /**
+     * Mostra la Home page (US-13) al posto della vista principale, dopo averne
+     * ricalcolato le liste delle tracce e playlist più riprodotte.
+     */
+    @FXML
+    private void onShowHome() {
+        homeController.refresh();
+        setViewVisible(home, true);
+        setViewVisible(mainView, false);
+    }
+
+    /** Torna alla vista principale (libreria e playlist) nascondendo la Home. */
+    private void showLibraryView() {
+        setViewVisible(mainView, true);
+        setViewVisible(home, false);
+    }
+
+    /** Mostra o nasconde una vista dello StackPane, escludendola anche dal layout. */
+    private void setViewVisible(Region view, boolean visible) {
+        view.setVisible(visible);
+        view.setManaged(visible);
     }
 
     /** Delega l'aggiunta di una traccia a {@link TrackListController}. */
@@ -146,6 +182,18 @@ public class MainController {
     @FXML
     private void onDeletePlaylistButton() {
         playlistController.onDeletePlaylist();
+    }
+
+    /** Delega la generazione automatica di una playlist per genere a {@link PlaylistController} (US-14a). */
+    @FXML
+    private void onGenerateByGenreButton() {
+        playlistController.onGenerateByGenre();
+    }
+
+    /** Delega la generazione automatica di una playlist per anno a {@link PlaylistController} (US-14b). */
+    @FXML
+    private void onGenerateByYearButton() {
+        playlistController.onGenerateByYear();
     }
 
     /** Delega l'aggiunta della traccia selezionata alla playlist a {@link PlaylistController}. */

@@ -1,56 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox xmlns="http://javafx.com/javafx"
+<VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.gruppo2.musicplaylistmanager.controller.HomeController"
-      stylesheets="@style.css"
-      spacing="0">
+      stylesheets="@style.css">
 
-    <!-- == COLONNA SINISTRA: Tracce più ascoltate == -->
-    <VBox prefWidth="500" styleClass="panel-left" spacing="12">
+    <!-- == INTESTAZIONE: freccia di ritorno + titolo Home == -->
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="panel-left">
         <padding>
-            <Insets top="20" right="16" bottom="20" left="20"/>
+            <Insets top="16" right="20" bottom="8" left="20"/>
         </padding>
+        <Button text="↩"
+                onAction="#onShowLibrary"
+                styleClass="btn"/>
+        <Label text="Home" styleClass="panel-title" style="-fx-font-size: 28px;"/>
+    </HBox>
 
-        <Label text="Tracce più ascoltate" styleClass="panel-title"/>
-        <Label text="Ordinate per numero di riproduzioni" styleClass="panel-subtitle"/>
+    <!-- == TRE BLOCCHI == -->
+    <HBox VBox.vgrow="ALWAYS">
 
-        <Label fx:id="noTracksLabel"
-               text="Nessuna traccia riprodotta ancora."
-               styleClass="panel-subtitle"
-               visible="true" managed="true"/>
+        <!-- BLOCCO 1: playlist più ascoltate (card ordinate per riproduzioni) -->
+        <VBox prefWidth="380" styleClass="panel-left" spacing="12">
+            <padding>
+                <Insets top="16" right="16" bottom="20" left="20"/>
+            </padding>
 
-        <ListView fx:id="topTracksListView" VBox.vgrow="ALWAYS">
-            <placeholder>
-                <Label text="Nessuna riproduzione registrata."/>
-            </placeholder>
-        </ListView>
-    </VBox>
+            <Label text="Top Playlist" styleClass="panel-title"/>
+            <Label text="Le playlist più ascoltate" styleClass="panel-subtitle"/>
 
-    <!-- == COLONNA DESTRA: Playlist più ascoltate == -->
-    <VBox HBox.hgrow="ALWAYS" styleClass="panel-right" spacing="12">
-        <padding>
-            <Insets top="20" right="20" bottom="20" left="20"/>
-        </padding>
+            <Label fx:id="noPlaylistsLabel"
+                   text="Nessuna playlist ancora avviata."
+                   styleClass="panel-subtitle"/>
 
-        <Label text="Playlist più ascoltate" styleClass="panel-title"/>
-        <Label text="Ordinate per numero di avvii" styleClass="panel-subtitle"/>
+            <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true">
+                <VBox fx:id="topPlaylistsPane"
+                      spacing="14"
+                      styleClass="playlist-grid"/>
+            </ScrollPane>
+        </VBox>
 
-        <Label fx:id="noPlaylistsLabel"
-               text="Nessuna playlist avviata ancora."
-               styleClass="panel-subtitle"
-               visible="true" managed="true"/>
+        <!-- BLOCCO 2: tracce della playlist selezionata nel blocco 1 -->
+        <VBox prefWidth="340" styleClass="panel-left" spacing="10">
+            <padding>
+                <Insets top="16" right="16" bottom="20" left="16"/>
+            </padding>
 
-        <ListView fx:id="topPlaylistsListView" VBox.vgrow="ALWAYS">
-            <placeholder>
-                <Label text="Nessuna riproduzione registrata."/>
-            </placeholder>
-        </ListView>
-    </VBox>
+            <VBox VBox.vgrow="ALWAYS" spacing="8" styleClass="detail-pane">
+                <Label fx:id="selectedPlaylistTitle"
+                       text="Seleziona una playlist"
+                       styleClass="detail-title"
+                       wrapText="true"/>
 
-</HBox>
+                <ListView fx:id="selectedPlaylistTracksView" VBox.vgrow="ALWAYS">
+                    <placeholder>
+                        <Label text="Seleziona una playlist a sinistra."/>
+                    </placeholder>
+                </ListView>
+            </VBox>
+        </VBox>
+
+        <!-- BLOCCO 3: tutte le tracce generali della libreria, più ascoltate in cima -->
+        <VBox HBox.hgrow="ALWAYS" styleClass="panel-right" spacing="12">
+            <padding>
+                <Insets top="16" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <Label text="Top Tracks" styleClass="panel-title"/>
+            <Label text="Tutte le tracce, ordinate per riproduzioni" styleClass="panel-subtitle"/>
+
+            <ListView fx:id="topTracksListView" VBox.vgrow="ALWAYS">
+                <placeholder>
+                    <Label text="La libreria è vuota."/>
+                </placeholder>
+            </ListView>
+        </VBox>
+
+    </HBox>
+
+</VBox>

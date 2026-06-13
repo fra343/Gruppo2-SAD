@@ -8,6 +8,7 @@ import javafx.application.Platform;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -559,6 +560,79 @@ class PlaybackServiceTest {
 
             assertEquals(t1, svc.currentTrackProperty().get());
             assertEquals(0, svc.getCurrentIndex());
+        });
+    }
+
+
+    //  US-13 – home page: ordinamento per numero di riproduzioni
+
+    @Test
+    void getTracksByPlayCountDesc_ordersByPlayCountDescending() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Track t2 = track("Song2", 200);
+            PlaybackService svc = new PlaybackService();
+            svc.play(playlistWith(t1));   // t1 -> 1
+            svc.play(playlistWith(t2));   // t2 -> 1
+            svc.play(playlistWith(t1));   // t1 -> 2 (playlist diversa: riavvio)
+
+            List<Track> top = svc.getTracksByPlayCountDesc(List.of(t1, t2));
+
+            assertEquals(List.of(t1, t2), top);
+        });
+    }
+
+    @Test
+    void getTracksByPlayCountDesc_unplayedTracksGoLast() throws Exception {
+        runFX(() -> {
+            Track played     = track("Played", 180);
+            Track neverHeard = track("Never", 200);
+            PlaybackService svc = new PlaybackService();
+            svc.play(playlistWith(played));
+
+            // entrambe presenti, la mai riprodotta finisce in coda
+            List<Track> top = svc.getTracksByPlayCountDesc(List.of(neverHeard, played));
+
+            assertEquals(List.of(played, neverHeard), top);
+        });
+    }
+
+    @Test
+    void getTracksByPlayCountDesc_noPlayback_keepsInputOrder() throws Exception {
+        runFX(() -> {
+            Track t1 = track("Song1", 180);
+            Track t2 = track("Song2", 200);
+            PlaybackService svc = new PlaybackService();
+
+            // nessuna riproduzione: tutte conservate, ordine d'ingresso invariato
+            assertEquals(List.of(t1, t2), svc.getTracksByPlayCountDesc(List.of(t1, t2)));
+        });
+    }
+
+    @Test
+    void getMostPlayedPlaylists_ordersByPlayCountDescending() throws Exception {
+        runFX(() -> {
+            Playlist pa = playlistWith(track("A", 180));
+            Playlist pb = playlistWith(track("B", 200));
+            PlaybackService svc = new PlaybackService();
+            svc.play(pa);   // pa -> 1
+            svc.play(pb);   // pb -> 1
+            svc.play(pa);   // pa -> 2
+
+            List<Playlist> top = svc.getMostPlayedPlaylists(List.of(pa, pb));
+
+            assertEquals(List.of(pa, pb), top);
+        });
+    }
+
+    @Test
+    void getMostPlayedPlaylists_emptyWhenNoPlayback() throws Exception {
+        runFX(() -> {
+            Playlist pa = playlistWith(track("A", 180));
+            Playlist pb = playlistWith(track("B", 200));
+            PlaybackService svc = new PlaybackService();
+
+            assertTrue(svc.getMostPlayedPlaylists(List.of(pa, pb)).isEmpty());
         });
     }
 }

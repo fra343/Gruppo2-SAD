@@ -9,6 +9,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
@@ -17,8 +18,11 @@
             stylesheets="@style.css">
 
     <!-- ===== CONTENUTO PRINCIPALE ===== -->
+    <!-- Lo StackPane sovrappone la vista principale (mainView) e la Home: il
+         MainController ne scambia la visibilità tramite i pulsanti di navigazione. -->
     <center>
-        <HBox>
+        <StackPane>
+        <HBox fx:id="mainView">
 
             <!-- == PANNELLO SINISTRO: Libreria == -->
             <VBox prefWidth="500" styleClass="panel-left" spacing="12">
@@ -26,7 +30,12 @@
                     <Insets top="20" right="16" bottom="16" left="20"/>
                 </padding>
 
-                <Label text="Library" styleClass="panel-title"/>
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="Library" styleClass="panel-title"/>
+                    <Button text="🏠 Home"
+                            onAction="#onShowHome"
+                            styleClass="btn"/>
+                </HBox>
                 <Label text="Le tue tracce musicali" styleClass="panel-subtitle"/>
 
                 <!-- Pulsante aggiungi traccia -->
@@ -92,6 +101,16 @@
                             styleClass="btn, btn-danger"/>
                 </HBox>
 
+                <!-- US-14: generazione automatica di playlist per genere/anno -->
+                <HBox spacing="8">
+                    <Button text="Crea per genere"
+                            onAction="#onGenerateByGenreButton"
+                            styleClass="btn"/>
+                    <Button text="Crea per anno"
+                            onAction="#onGenerateByYearButton"
+                            styleClass="btn"/>
+                </HBox>
+
                 <!-- Griglia di card playlist, scorribile -->
                 <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true">
                     <FlowPane fx:id="playlistFlowPane"
@@ -126,6 +145,10 @@
             </VBox>
 
         </HBox>
+
+        <!-- Home page (US-13): inizialmente nascosta, mostrata dal MainController. -->
+        <fx:include fx:id="home" source="Home.fxml"/>
+        </StackPane>
     </center>
 
     <!-- ===== PLAYER IN BASSO ===== -->

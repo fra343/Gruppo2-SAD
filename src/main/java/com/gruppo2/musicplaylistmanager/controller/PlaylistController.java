@@ -8,6 +8,7 @@ import com.gruppo2.musicplaylistmanager.command.MoveTrackCommand;
 import com.gruppo2.musicplaylistmanager.command.RemoveTrackFromPlaylistCommand;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
 import com.gruppo2.musicplaylistmanager.model.Track;
+import com.gruppo2.musicplaylistmanager.service.LibraryService;
 import com.gruppo2.musicplaylistmanager.service.PlaybackService;
 import com.gruppo2.musicplaylistmanager.service.PlaylistService;
 import javafx.beans.InvalidationListener;
@@ -19,6 +20,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -31,7 +33,9 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Controller per la gestione delle playlist: creazione, eliminazione,
@@ -51,6 +55,7 @@ public class PlaylistController {
     private static final PseudoClass CURRENT = PseudoClass.getPseudoClass("current");
 
     private PlaylistService  playlistService;
+    private LibraryService   libraryService;
     private PlaybackService  playbackService;
     private CommandHistory   commandHistory;
     private FlowPane         playlistFlowPane;
@@ -69,6 +74,16 @@ public class PlaylistController {
      */
     public void setPlaylistService(PlaylistService playlistService) {
         this.playlistService = playlistService;
+    }
+
+    /**
+     * Inietta il servizio della libreria, usato dalla generazione automatica di
+     * playlist per interrogare le tracce per genere e anno (US-14a / US-14b).
+     *
+     * @param libraryService servizio condiviso con gli altri controller
+     */
+    public void setLibraryService(LibraryService libraryService) {
+        this.libraryService = libraryService;
     }
 
     /**
@@ -223,6 +238,106 @@ public class PlaylistController {
             commandHistory.push(new DeletePlaylistCommand(playlistService, selectedPlaylist));
             selectedPlaylist = null;
         }
+    }
+
+    /**
+     * US-14a: genera una playlist con tutte le tracce di un genere scelto.
+     * Apre un dialog con i generi presenti in libreria (selezionabili o digitabili);
+     * se per il genere indicato non esistono tracce mostra un messaggio informativo
+     * e non crea alcuna playlist.
+     */
+    public void onGenerateByGenre() {
+        askChoice("Genera playlist per genere", "Genere:", distinctGenres())
+                .ifPresent(genre -> generate("Genere: " + genre, libraryService.findByGenre(genre)));
+    }
+
+    /**
+     * US-14b: genera una playlist con tutte le tracce di un anno scelto, riusando
+     * il flusso della US-14a. Apre un dialog con gli anni presenti in libreria;
+     * gestisce anno non numerico e assenza di tracce con un messaggio informativo,
+     * senza creare alcuna playlist.
+     */
+    public void onGenerateByYear() {
+        Optional<String> choice = askChoice("Genera playlist per anno", "Anno:", distinctYears());
+        if (choice.isEmpty()) {
+            return;
+        }
+        int year;
+        try {
+            year = Integer.parseInt(choice.get());
+        } catch (NumberFormatException ex) {
+            showError("Inserisci un anno valido (numero intero).");
+            return;
+        }
+        generate("Anno: " + year, libraryService.findByYear(year));
+    }
+
+    /**
+     * Crea la playlist automatica con le tracce fornite riusando
+     * {@link PlaylistService#generateAutoPlaylist}: se la lista è vuota mostra il
+     * messaggio dell'eccezione e non crea nulla. La nuova playlist compare da sé
+     * nel pannello grazie al listener registrato sull'ObservableList.
+     *
+     * @param name   nome della playlist da generare
+     * @param tracks tracce ottenute dal criterio di ricerca
+     */
+    private void generate(String name, List<Track> tracks) {
+        try {
+            playlistService.generateAutoPlaylist(name, tracks);
+        } catch (IllegalArgumentException ex) {
+            showError(ex.getMessage());
+        }
+    }
+
+    /** @return i generi distinti delle tracce in libreria, ordinati alfabeticamente. */
+    private List<String> distinctGenres() {
+        return libraryService.getAllTracks().stream()
+                .map(Track::getGenre)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    /** @return gli anni distinti delle tracce in libreria, ordinati. */
+    private List<String> distinctYears() {
+        return libraryService.getAllTracks().stream()
+                .map(t -> String.valueOf(t.getYear()))
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Mostra un dialog con un menu a tendina editabile dei valori forniti e
+     * restituisce il valore scelto o digitato, oppure vuoto se l'utente annulla
+     * o lascia il campo vuoto.
+     *
+     * @param title     titolo del dialog
+     * @param labelText etichetta del campo
+     * @param options   valori proposti nel menu a tendina
+     * @return il valore selezionato/digitato, oppure {@link Optional#empty()}
+     */
+    private Optional<String> askChoice(String title, String labelText, List<String> options) {
+        ComboBox<String> combo = new ComboBox<>();
+        combo.getItems().addAll(options);
+        combo.setEditable(true);
+        combo.setMaxWidth(Double.MAX_VALUE);
+
+        VBox content = new VBox(8, new Label(labelText), combo);
+        content.setStyle("-fx-padding: 10;");
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle(title);
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.setOnShown(e -> combo.requestFocus());
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            String value = combo.getEditor().getText().trim();
+            return value.isEmpty() ? Optional.empty() : Optional.of(value);
+        }
+        return Optional.empty();
     }
 
     /**

@@ -6,6 +6,8 @@ import com.gruppo2.musicplaylistmanager.model.Track;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -286,5 +288,39 @@ class PlaylistServiceTest {
         assertTrue(p.getTracks().contains(t1));
         assertTrue(p.getTracks().contains(t2));
         assertTrue(p.getTracks().contains(t3));
+    }
+
+    // US-14a / US-14b: generateAutoPlaylist (flusso di generazione automatica)
+
+    @Test
+    void generateAutoPlaylistCreatesPlaylistWithGivenTracks() {
+        Track t1 = new Track("A", "x", 100, "Rock", 2000);
+        Track t2 = new Track("B", "x", 100, "Rock", 2001);
+        Playlist p = playlistService.generateAutoPlaylist("Genere: Rock", List.of(t1, t2));
+        assertEquals("Genere: Rock", p.getName());
+        assertEquals(2, p.getTracks().size());
+        assertTrue(p.getTracks().contains(t1));
+        assertTrue(p.getTracks().contains(t2));
+    }
+
+    @Test
+    void generateAutoPlaylistAddsPlaylistToLibrary() {
+        Track t1 = new Track("A", "x", 100, "Rock", 2000);
+        playlistService.generateAutoPlaylist("Genere: Rock", List.of(t1));
+        assertEquals(1, playlistService.getAllPlaylists().size());
+        assertEquals("Genere: Rock", playlistService.getAllPlaylists().get(0).getName());
+    }
+
+    @Test
+    void generateAutoPlaylistEmptyTracksThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> playlistService.generateAutoPlaylist("Vuota", List.of()));
+    }
+
+    @Test
+    void generateAutoPlaylistEmptyTracksCreatesNoPlaylist() {
+        assertThrows(IllegalArgumentException.class,
+                () -> playlistService.generateAutoPlaylist("Vuota", List.of()));
+        assertTrue(playlistService.getAllPlaylists().isEmpty());
     }
 }
