@@ -2,6 +2,7 @@ package com.gruppo2.musicplaylistmanager.controller;
 
 import com.gruppo2.musicplaylistmanager.command.CommandHistory;
 import com.gruppo2.musicplaylistmanager.model.Library;
+import com.gruppo2.musicplaylistmanager.model.Tag;
 import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.persistence.JsonPlaylistDAO;
 import com.gruppo2.musicplaylistmanager.persistence.JsonTrackDAO;
@@ -12,6 +13,7 @@ import com.gruppo2.musicplaylistmanager.service.PlaybackService;
 import com.gruppo2.musicplaylistmanager.service.PlaylistService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -48,6 +50,7 @@ public class MainController {
     @FXML private Button                     undoButton;
     @FXML private TableView<Track>           trackTableView;
     @FXML private TableColumn<Track, String> titleColumn;
+    @FXML private TableColumn<Track, Void>   tagColumn;
     @FXML private TableColumn<Track, String> authorColumn;
     @FXML private TableColumn<Track, String> genreColumn;
     @FXML private TableColumn<Track, String> yearColumn;
@@ -97,6 +100,16 @@ public class MainController {
             int s = data.getValue().getDuration();
             return new SimpleStringProperty(String.format("%d:%02d", s / 60, s % 60));
         });
+        // US-15: colonna con i tag cliccabili accanto alla traccia (slot fissi).
+        tagColumn.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty || getIndex() < 0 || getIndex() >= getTableView().getItems().size()
+                        ? null
+                        : tagRow(getTableView().getItems().get(getIndex())));
+            }
+        });
 
         TableColumn<Track, Void> playTrackColumn = new TableColumn<>("");
         playTrackColumn.setMinWidth(36);
@@ -134,7 +147,7 @@ public class MainController {
         // US-13: Home page sovrapposta alla vista principale nello StackPane.
         // Parte nascosta; l'utente la apre col pulsante "Home" e torna indietro
         // con la freccia "↩", la cui logica di navigazione resta qui.
-        homeController.setDependencies(library, playbackService);
+        homeController.setDependencies(library, libraryService, playbackService);
         homeController.setOnBackToLibrary(this::showLibraryView);
 
         // US-18b: i service caricano lo stato persistente tramite i rispettivi DAO.
@@ -166,10 +179,18 @@ public class MainController {
         setViewVisible(mainView, false);
     }
 
-    /** Torna alla vista principale (libreria e playlist) nascondendo la Home. */
+    /**
+     * Torna alla vista principale (libreria e playlist) nascondendo la Home.
+     * Rinfresca la tabella delle tracce per riflettere eventuali tag (US-15)
+     * modificati dalla Home: la TableView non rileva le mutazioni interne agli
+     * oggetti Track, quindi senza questo refresh i badge resterebbero obsoleti.
+     * È il duale di {@link #onShowHome()}, che rinfresca la Home all'ingresso,
+     * così che i tag risultino sempre allineati in entrambe le direzioni.
+     */
     private void showLibraryView() {
         setViewVisible(mainView, true);
         setViewVisible(home, false);
+        trackTableView.refresh();
     }
 
     /** Mostra o nasconde una vista dello StackPane, escludendola anche dal layout. */
@@ -223,6 +244,12 @@ public class MainController {
         playlistController.onGenerateByYear();
     }
 
+    /** Delega la generazione automatica di una playlist per tag a {@link PlaylistController} (US-16). */
+    @FXML
+    private void onGenerateByTagButton() {
+        playlistController.onGenerateByTag();
+    }
+
     /** Delega l'aggiunta della traccia selezionata alla playlist a {@link PlaylistController}. */
     @FXML
     private void onAddToPlaylistButton() {
@@ -251,5 +278,55 @@ public class MainController {
     @FXML
     private void onUndoButton() {
         commandHistory.undo();
+    }
+
+    /**
+     * Costruisce gli indicatori dei tag visivi della traccia (US-15): tre slot
+     * fissi (preferito, esplicito, nuova uscita), colorati se il tag è attivo e
+     * grigi altrimenti. Ogni indicatore è cliccabile e attiva/disattiva il tag
+     * direttamente dalla riga della traccia.
+     *
+     * @param track traccia di cui mostrare i tag
+     * @return contenitore con i tre indicatori cliccabili
+     */
+    private HBox tagRow(Track track) {
+        HBox row = new HBox(8);
+        row.setAlignment(Pos.CENTER_LEFT);
+        for (Tag tag : Tag.values()) {
+            row.getChildren().add(tagBadge(track, tag));
+        }
+        return row;
+    }
+
+    /**
+     * Crea l'indicatore cliccabile di un tag: al click lo attiva o disattiva
+     * tramite {@link LibraryService} e aggiorna la tabella.
+     *
+     * @param track traccia su cui agire
+     * @param tag   tag rappresentato dall'indicatore
+     * @return etichetta cliccabile del tag
+     */
+    private Label tagBadge(Track track, Tag tag) {
+        boolean active = track.getTags().contains(tag);
+        String text = switch (tag) {
+            case FAVOURITE   -> active ? "♥" : "♡";
+            case EXPLICIT    -> "E";
+            case NEW_RELEASE -> "New";
+        };
+        String activeStyle = switch (tag) {
+            case FAVOURITE   -> "tag-badge-fav";
+            case EXPLICIT    -> "tag-badge-explicit";
+            case NEW_RELEASE -> "tag-badge-new";
+        };
+        Label badge = new Label(text);
+        badge.getStyleClass().addAll("tag-badge", active ? activeStyle : "tag-badge-off");
+        badge.setMinWidth(Region.USE_PREF_SIZE); // mostra sempre il simbolo per intero, mai "..."
+        badge.setOnMouseClicked(e -> {
+            e.consume();
+            if (active) libraryService.removeTag(track, tag);
+            else        libraryService.addTag(track, tag);
+            trackTableView.refresh();
+        });
+        return badge;
     }
 }

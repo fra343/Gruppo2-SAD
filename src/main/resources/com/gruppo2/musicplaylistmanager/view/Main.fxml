@@ -25,7 +25,7 @@
         <HBox fx:id="mainView">
 
             <!-- == PANNELLO SINISTRO: Libreria == -->
-            <VBox prefWidth="500" styleClass="panel-left" spacing="12">
+            <VBox prefWidth="620" minWidth="620" styleClass="panel-left" spacing="12">
                 <padding>
                     <Insets top="20" right="16" bottom="16" left="20"/>
                 </padding>
@@ -73,11 +73,12 @@
                         <Label text="Nessuna traccia. Clicca + per iniziare."/>
                     </placeholder>
                     <columns>
-                        <TableColumn fx:id="titleColumn"    text="Titolo"   prefWidth="140" resizable="false" reorderable="false"/>
-                        <TableColumn fx:id="authorColumn"   text="Autore"   prefWidth="90"  resizable="false" reorderable="false"/>
-                        <TableColumn fx:id="genreColumn"    text="Genere"   prefWidth="75"  resizable="false" reorderable="false"/>
-                        <TableColumn fx:id="yearColumn"     text="Anno"     prefWidth="65"  resizable="false" reorderable="false"/>
-                        <TableColumn fx:id="durationColumn" text="Durata"   prefWidth="54"  resizable="false" reorderable="false"/>
+                        <TableColumn fx:id="titleColumn"    text="Titolo"   prefWidth="130" reorderable="false"/>
+                        <TableColumn fx:id="tagColumn"      text="Tag"      minWidth="112" prefWidth="112" maxWidth="112" resizable="false" reorderable="false" sortable="false"/>
+                        <TableColumn fx:id="authorColumn"   text="Autore"   prefWidth="90"  reorderable="false"/>
+                        <TableColumn fx:id="genreColumn"    text="Genere"   prefWidth="72"  reorderable="false"/>
+                        <TableColumn fx:id="yearColumn"     text="Anno"     prefWidth="58"  reorderable="false"/>
+                        <TableColumn fx:id="durationColumn" text="Durata"   prefWidth="60"  reorderable="false"/>
                     </columns>
                 </TableView>
             </VBox>
@@ -108,6 +109,9 @@
                             styleClass="btn"/>
                     <Button text="Crea per anno"
                             onAction="#onGenerateByYearButton"
+                            styleClass="btn"/>
+                    <Button text="Crea per tag"
+                            onAction="#onGenerateByTagButton"
                             styleClass="btn"/>
                 </HBox>
 

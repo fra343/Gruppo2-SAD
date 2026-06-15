@@ -7,6 +7,7 @@ import com.gruppo2.musicplaylistmanager.command.DeletePlaylistCommand;
 import com.gruppo2.musicplaylistmanager.command.MoveTrackCommand;
 import com.gruppo2.musicplaylistmanager.command.RemoveTrackFromPlaylistCommand;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
+import com.gruppo2.musicplaylistmanager.model.Tag;
 import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.service.LibraryService;
 import com.gruppo2.musicplaylistmanager.service.PlaybackService;
@@ -32,6 +33,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 
 import java.util.List;
 import java.util.Optional;
@@ -270,6 +272,64 @@ public class PlaylistController {
             return;
         }
         generate("Anno: " + year, libraryService.findByYear(year));
+    }
+
+    /**
+     * US-16: genera una playlist con tutte le tracce che hanno il tag scelto,
+     * riusando il flusso di generazione di US-14a/US-14b. Apre un dialog di scelta
+     * fra i tre tag visivi; il nome della playlist dipende dal tag selezionato
+     * (es. "I miei Preferiti" per {@link Tag#FAVOURITE}). Se nessuna traccia ha il
+     * tag mostra un messaggio informativo e non crea alcuna playlist.
+     */
+    public void onGenerateByTag() {
+        askTag().ifPresent(tag ->
+                generate(playlistNameForTag(tag), libraryService.findByTag(tag)));
+    }
+
+    /**
+     * Mostra un dialog con un menu a tendina dei tag visivi (etichette leggibili)
+     * e restituisce il tag scelto, oppure vuoto se l'utente annulla.
+     *
+     * @return il tag selezionato, oppure {@link Optional#empty()}
+     */
+    private Optional<Tag> askTag() {
+        ComboBox<Tag> combo = new ComboBox<>();
+        combo.getItems().addAll(Tag.values());
+        combo.setConverter(new StringConverter<>() {
+            @Override public String toString(Tag tag) { return tag == null ? "" : tag.getLabel(); }
+            @Override public Tag fromString(String s) { return null; }
+        });
+        combo.getSelectionModel().selectFirst();
+        combo.setMaxWidth(Double.MAX_VALUE);
+
+        VBox content = new VBox(8, new Label("Tag:"), combo);
+        content.setStyle("-fx-padding: 10;");
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Genera playlist per tag");
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.setOnShown(e -> combo.requestFocus());
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            return Optional.ofNullable(combo.getValue());
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Restituisce il nome della playlist generata per il tag indicato.
+     *
+     * @param tag tag scelto per la generazione
+     * @return nome descrittivo della playlist
+     */
+    private String playlistNameForTag(Tag tag) {
+        return switch (tag) {
+            case FAVOURITE   -> "I miei Preferiti";
+            case EXPLICIT    -> "Brani Espliciti";
+            case NEW_RELEASE -> "Nuove Uscite";
+        };
     }
 
     /**

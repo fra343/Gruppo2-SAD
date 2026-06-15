@@ -2,8 +2,12 @@ package com.gruppo2.musicplaylistmanager.controller;
 
 import com.gruppo2.musicplaylistmanager.model.Library;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
+import com.gruppo2.musicplaylistmanager.model.Tag;
 import com.gruppo2.musicplaylistmanager.model.Track;
+import com.gruppo2.musicplaylistmanager.service.LibraryService;
 import com.gruppo2.musicplaylistmanager.service.PlaybackService;
+import javafx.beans.InvalidationListener;
+import javafx.beans.WeakInvalidationListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -40,6 +44,7 @@ public class HomeController {
     @FXML private ListView<Track> topTracksListView;
 
     private Library         library;
+    private LibraryService  libraryService;
     private PlaybackService playbackService;
     private Runnable        onBackToLibrary;
 
@@ -49,19 +54,25 @@ public class HomeController {
     /** Playlist selezionata di cui il blocco centrale mostra le tracce, o {@code null}. */
     private Playlist selectedPlaylist;
 
+    private final InvalidationListener playCountListener = obs -> onPlayCountChanged();
+
     /**
      * Inietta le dipendenze necessarie al controller e configura la cell factory
      * del blocco "Top Tracks", che affianca a ogni traccia il relativo numero di
      * riproduzioni quando maggiore di zero.
      *
      * @param library         libreria condivisa con l'applicazione
+     * @param libraryService  servizio della libreria, usato per attivare/disattivare i tag
      * @param playbackService servizio di riproduzione da cui leggere i conteggi
      */
-    public void setDependencies(Library library, PlaybackService playbackService) {
+    public void setDependencies(Library library, LibraryService libraryService, PlaybackService playbackService) {
         this.library         = library;
+        this.libraryService  = libraryService;
         this.playbackService = playbackService;
         configureSelectedPlaylistCells();
         configureTopTracksCells();
+        playbackService.currentTrackProperty()
+                .addListener(new WeakInvalidationListener(playCountListener));
     }
 
     /**
@@ -175,6 +186,7 @@ public class HomeController {
         card.setPrefHeight(90);
         card.setMinHeight(90);
         card.setStyle(cardStyle(false));
+        card.setUserData(playlist);
         card.setOnMouseClicked(e -> selectCard(card, playlist));
         return card;
     }
@@ -258,12 +270,106 @@ public class HomeController {
                     setText(null);
                     setGraphic(null);
                 } else {
+                    // US-13 + US-15: nome a sinistra; numero di ascolti e tag cliccabili a destra.
+                    Label name = new Label(item.toString());
+                    name.setMaxWidth(Double.MAX_VALUE);
+                    HBox.setHgrow(name, Priority.ALWAYS);
+                    HBox row = new HBox(12, playBtn, name);
+                    row.setAlignment(Pos.CENTER_LEFT);
                     int count = playbackService.getTrackPlayCount(item);
-                    setText(count > 0 ? item + "  —  " + count + " ascolti" : item.toString());
-                    setGraphic(playBtn);
+                    if (count > 0) {
+                        Label countLabel = new Label(count + " ascolti");
+                        countLabel.setStyle("-fx-text-fill: #8A8A90; -fx-font-size: 12px;");
+                        row.getChildren().add(countLabel);
+                    }
+                    row.getChildren().add(tagRow(item));
+                    setText(null);
+                    setGraphic(row);
                 }
             }
         });
+    }
+
+    /**
+     * Costruisce gli indicatori dei tag visivi della traccia (US-15): tre slot
+     * fissi cliccabili (preferito, esplicito, nuova uscita), colorati se il tag
+     * è attivo e grigi altrimenti.
+     *
+     * @param track traccia di cui mostrare i tag
+     * @return contenitore con i tre indicatori cliccabili
+     */
+    private HBox tagRow(Track track) {
+        HBox row = new HBox(8);
+        row.setAlignment(Pos.CENTER_LEFT);
+        for (Tag tag : Tag.values()) {
+            row.getChildren().add(tagBadge(track, tag));
+        }
+        return row;
+    }
+
+    /**
+     * Crea l'indicatore cliccabile di un tag: al click lo attiva o disattiva
+     * tramite {@link LibraryService} e aggiorna la lista dei Top Tracks.
+     *
+     * @param track traccia su cui agire
+     * @param tag   tag rappresentato dall'indicatore
+     * @return etichetta cliccabile del tag
+     */
+    private Label tagBadge(Track track, Tag tag) {
+        boolean active = track.getTags().contains(tag);
+        String text = switch (tag) {
+            case FAVOURITE   -> active ? "♥" : "♡";
+            case EXPLICIT    -> "E";
+            case NEW_RELEASE -> "New";
+        };
+        String activeStyle = switch (tag) {
+            case FAVOURITE   -> "tag-badge-fav";
+            case EXPLICIT    -> "tag-badge-explicit";
+            case NEW_RELEASE -> "tag-badge-new";
+        };
+        Label badge = new Label(text);
+        badge.getStyleClass().addAll("tag-badge", active ? activeStyle : "tag-badge-off");
+        badge.setMinWidth(Region.USE_PREF_SIZE); // mostra sempre il simbolo per intero, mai "..."
+        badge.setOnMouseClicked(e -> {
+            e.consume();
+            if (active) libraryService.removeTag(track, tag);
+            else        libraryService.addTag(track, tag);
+            topTracksListView.refresh();
+        });
+        return badge;
+    }
+
+    /**
+     * Aggiorna in tempo reale i contatori nella Home quando cambia la traccia corrente,
+     * ossia ogni volta che un ascolto viene registrato nel {@link com.gruppo2.musicplaylistmanager.service.PlaybackService}.
+     * Ricostruisce le card delle playlist con i conteggi aggiornati preservando la selezione
+     * corrente, e riordina la lista Top Tracks per play count decrescente.
+     */
+    private void onPlayCountChanged() {
+        Playlist previousSelected = selectedPlaylist;
+
+        List<Playlist> topPlaylists = playbackService.getMostPlayedPlaylists(library.getPlaylists());
+        rebuildPlaylistCards(topPlaylists);
+        selectedPlaylist = null;
+
+        if (previousSelected != null) {
+            boolean found = false;
+            search:
+            for (Node rowNode : topPlaylistsPane.getChildren()) {
+                if (!(rowNode instanceof HBox row)) continue;
+                for (Node cardNode : row.getChildren()) {
+                    if (cardNode.getUserData() == previousSelected) {
+                        selectCard(cardNode, previousSelected);
+                        found = true;
+                        break search;
+                    }
+                }
+            }
+            if (!found) clearSelectedPlaylist();
+        }
+
+        topTracksListView.getItems().setAll(
+                playbackService.getTracksByPlayCountDesc(library.getTracks()));
     }
 
     /** Stile inline di una card, evidenziata quando {@code selected} è {@code true}. */

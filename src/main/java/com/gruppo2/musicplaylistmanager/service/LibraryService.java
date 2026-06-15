@@ -2,6 +2,7 @@ package com.gruppo2.musicplaylistmanager.service;
 
 import com.gruppo2.musicplaylistmanager.model.Library;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
+import com.gruppo2.musicplaylistmanager.model.Tag;
 import com.gruppo2.musicplaylistmanager.model.Track;
 import com.gruppo2.musicplaylistmanager.persistence.TrackDAO;
 import com.gruppo2.musicplaylistmanager.util.ValidationUtils;
@@ -134,6 +135,41 @@ public class LibraryService {
      */
     public List<Track> findByYear(int year) {
         return library.findByYear(year);
+    }
+
+    /**
+     * Applica un tag visivo alla traccia (US-15).
+     * Se il tag è già presente il metodo non produce effetti, poiché
+     * {@code tags} è un insieme e non ammette duplicati.
+     *
+     * @param track traccia a cui applicare il tag
+     * @param tag   tag da applicare
+     */
+    public void addTag(Track track, Tag tag) {
+        track.getTags().add(tag);
+    }
+
+    /**
+     * Rimuove un tag visivo dalla traccia (US-15).
+     * Se il tag non è presente il metodo non produce effetti.
+     *
+     * @param track traccia da cui rimuovere il tag
+     * @param tag   tag da rimuovere
+     */
+    public void removeTag(Track track, Tag tag) {
+        track.getTags().remove(tag);
+    }
+
+    /**
+     * Restituisce le tracce della libreria che hanno il tag indicato,
+     * delegando a {@link Library#findByTag(Tag)}.
+     * Usato dalla generazione automatica di playlist per tag (US-16).
+     *
+     * @param tag tag da cercare
+     * @return lista (eventualmente vuota) delle tracce corrispondenti
+     */
+    public List<Track> findByTag(Tag tag) {
+        return library.findByTag(tag);
     }
 
     /**

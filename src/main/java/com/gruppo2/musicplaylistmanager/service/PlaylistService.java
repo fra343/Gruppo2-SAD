@@ -49,15 +49,29 @@ public class PlaylistService {
      */
     public Playlist createPlaylist(String name) {
         ValidationUtils.requireNonEmpty(name, "Nome playlist");
+        requireUniqueName(name);
+        Playlist playlist = new Playlist(name.trim());
+        library.addPlaylist(playlist);
+        return playlist;
+    }
+
+    /**
+     * Verifica che nessuna playlist della libreria abbia già il nome indicato
+     * (confronto case-insensitive sul nome normalizzato con {@code trim()}).
+     * Centralizza la regola "nessun nome duplicato" usata sia dalla creazione
+     * manuale ({@link #createPlaylist}) sia dalla generazione automatica
+     * ({@link #generateAutoPlaylist}), evitando playlist identiche.
+     *
+     * @param name nome da validare
+     * @throws IllegalArgumentException se esiste già una playlist con lo stesso nome
+     */
+    private void requireUniqueName(String name) {
         boolean duplicate = library.getPlaylists().stream()
                 .anyMatch(p -> p.getName().equalsIgnoreCase(name.trim()));
         if (duplicate) {
             throw new IllegalArgumentException(
                     "Esiste già una playlist con il nome '" + name.trim() + "'.");
         }
-        Playlist playlist = new Playlist(name.trim());
-        library.addPlaylist(playlist);
-        return playlist;
     }
 
     /**
@@ -162,11 +176,13 @@ public class PlaylistService {
      * @param tracks tracce ottenute dal criterio di ricerca; non deve essere vuota
      * @return la nuova playlist aggiunta alla libreria
      * @throws IllegalArgumentException se la lista di tracce è vuota
+     *                                  o se esiste già una playlist con lo stesso nome
      */
     public Playlist generateAutoPlaylist(String name, List<Track> tracks) {
         if (tracks.isEmpty()) {
             throw new IllegalArgumentException("Nessuna traccia trovata per il criterio selezionato.");
         }
+        requireUniqueName(name);
         Playlist playlist = new Playlist(name);
         tracks.forEach(playlist::addTrack);
         library.addPlaylist(playlist);

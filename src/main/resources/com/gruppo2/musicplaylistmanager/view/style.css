@@ -65,6 +65,14 @@
 .btn-danger:hover   { -fx-background-color: #FBEFEE; -fx-border-color: #E7C7C3; -fx-text-fill: #C0392B; }
 .btn-danger:pressed { -fx-background-color: #F2DEDB; -fx-border-color: #DDB6B1; -fx-text-fill: #C0392B; }
 
+/* US-15: badge dei tag cliccabili accanto alla traccia (slot fissi con stato on/off) */
+.tag-badge          { -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 0 3 0 3; }
+.tag-badge:hover    { -fx-underline: true; }
+.tag-badge-off      { -fx-text-fill: #C7C7CF; }  /* tag non attivo: grigio */
+.tag-badge-fav      { -fx-text-fill: #E0245E; }  /* preferito attivo: rosso */
+.tag-badge-explicit { -fx-text-fill: #C0392B; }  /* esplicito attivo: rosso */
+.tag-badge-new      { -fx-text-fill: #2E6FE0; }  /* nuova uscita attivo: blu */
+
 /* ============================================================
    TABELLA TRACCE
    ============================================================ */

@@ -27,7 +27,7 @@
     <HBox VBox.vgrow="ALWAYS">
 
         <!-- BLOCCO 1: playlist più ascoltate (card ordinate per riproduzioni) -->
-        <VBox prefWidth="380" styleClass="panel-left" spacing="12">
+        <VBox prefWidth="300" maxWidth="300" styleClass="panel-left" spacing="12">
             <padding>
                 <Insets top="16" right="16" bottom="20" left="20"/>
             </padding>
@@ -47,7 +47,7 @@
         </VBox>
 
         <!-- BLOCCO 2: tracce della playlist selezionata nel blocco 1 -->
-        <VBox prefWidth="340" styleClass="panel-left" spacing="10">
+        <VBox HBox.hgrow="ALWAYS" styleClass="panel-left" spacing="10">
             <padding>
                 <Insets top="16" right="16" bottom="20" left="16"/>
             </padding>
@@ -67,7 +67,7 @@
         </VBox>
 
         <!-- BLOCCO 3: tutte le tracce generali della libreria, più ascoltate in cima -->
-        <VBox HBox.hgrow="ALWAYS" styleClass="panel-right" spacing="12">
+        <VBox prefWidth="550" maxWidth="550" styleClass="panel-right" spacing="12">
             <padding>
                 <Insets top="16" right="20" bottom="20" left="20"/>
             </padding>

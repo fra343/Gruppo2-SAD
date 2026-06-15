@@ -2,6 +2,7 @@ package com.gruppo2.musicplaylistmanager.service;
 
 import com.gruppo2.musicplaylistmanager.model.Library;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
+import com.gruppo2.musicplaylistmanager.model.Tag;
 import com.gruppo2.musicplaylistmanager.model.Track;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -405,6 +406,78 @@ class LibraryServiceTest {
     void findByYearNoMatchReturnsEmpty() {
         libraryService.addTrack(new Track("A", "x", 100, "Rock", 2000));
         assertTrue(libraryService.findByYear(1999).isEmpty());
+    }
+
+    // US-15: aggiunta e rimozione di tag visivi
+
+    @Test
+    void addTagAddsTagToTrack() {
+        Track t = validTrack();
+        libraryService.addTrack(t);
+        libraryService.addTag(t, Tag.FAVOURITE);
+        assertTrue(t.getTags().contains(Tag.FAVOURITE));
+    }
+
+    @Test
+    void addMultipleTagsAllPresent() {
+        Track t = validTrack();
+        libraryService.addTrack(t);
+        libraryService.addTag(t, Tag.FAVOURITE);
+        libraryService.addTag(t, Tag.EXPLICIT);
+        assertTrue(t.getTags().contains(Tag.FAVOURITE));
+        assertTrue(t.getTags().contains(Tag.EXPLICIT));
+        assertEquals(2, t.getTags().size());
+    }
+
+    @Test
+    void addDuplicateTagHasNoEffect() {
+        Track t = validTrack();
+        libraryService.addTrack(t);
+        libraryService.addTag(t, Tag.FAVOURITE);
+        libraryService.addTag(t, Tag.FAVOURITE);
+        assertEquals(1, t.getTags().size());
+    }
+
+    @Test
+    void removeTagRemovesTagFromTrack() {
+        Track t = validTrack();
+        libraryService.addTrack(t);
+        libraryService.addTag(t, Tag.EXPLICIT);
+        libraryService.removeTag(t, Tag.EXPLICIT);
+        assertFalse(t.getTags().contains(Tag.EXPLICIT));
+    }
+
+    @Test
+    void removeAbsentTagDoesNotThrow() {
+        Track t = validTrack();
+        libraryService.addTrack(t);
+        assertDoesNotThrow(() -> libraryService.removeTag(t, Tag.NEW_RELEASE));
+    }
+
+    // US-16: ricerca per tag (generazione automatica di playlist per tag)
+
+    @Test
+    void findByTagReturnsMatchingTracks() {
+        Track fav1  = new Track("A", "x", 100, "Rock", 2000);
+        Track fav2  = new Track("B", "x", 100, "Pop",  2001);
+        Track plain = new Track("C", "x", 100, "Jazz", 2002);
+        libraryService.addTrack(fav1);
+        libraryService.addTrack(fav2);
+        libraryService.addTrack(plain);
+        libraryService.addTag(fav1, Tag.FAVOURITE);
+        libraryService.addTag(fav2, Tag.FAVOURITE);
+
+        assertEquals(2, libraryService.findByTag(Tag.FAVOURITE).size());
+        assertTrue(libraryService.findByTag(Tag.FAVOURITE).contains(fav1));
+        assertTrue(libraryService.findByTag(Tag.FAVOURITE).contains(fav2));
+    }
+
+    @Test
+    void findByTagNoMatchReturnsEmpty() {
+        Track t = validTrack();
+        libraryService.addTrack(t);
+        libraryService.addTag(t, Tag.FAVOURITE);
+        assertTrue(libraryService.findByTag(Tag.EXPLICIT).isEmpty());
     }
 
 }

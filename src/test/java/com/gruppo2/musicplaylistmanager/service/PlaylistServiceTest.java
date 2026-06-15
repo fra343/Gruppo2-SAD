@@ -2,6 +2,7 @@ package com.gruppo2.musicplaylistmanager.service;
 
 import com.gruppo2.musicplaylistmanager.model.Library;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
+import com.gruppo2.musicplaylistmanager.model.Tag;
 import com.gruppo2.musicplaylistmanager.model.Track;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -322,5 +323,53 @@ class PlaylistServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> playlistService.generateAutoPlaylist("Vuota", List.of()));
         assertTrue(playlistService.getAllPlaylists().isEmpty());
+    }
+
+    @Test
+    void generateAutoPlaylistWithDuplicateNameThrows() {
+        Track t = validTrack();
+        playlistService.generateAutoPlaylist("I miei Preferiti", List.of(t));
+        // Rigenerare con lo stesso nome non deve creare una seconda playlist identica
+        assertThrows(IllegalArgumentException.class,
+                () -> playlistService.generateAutoPlaylist("I miei Preferiti", List.of(t)));
+    }
+
+    @Test
+    void generateAutoPlaylistDuplicateNameDoesNotCreateSecondPlaylist() {
+        Track t = validTrack();
+        playlistService.generateAutoPlaylist("I miei Preferiti", List.of(t));
+        assertThrows(IllegalArgumentException.class,
+                () -> playlistService.generateAutoPlaylist("I miei Preferiti", List.of(t)));
+        assertEquals(1, playlistService.getAllPlaylists().size());
+    }
+
+    @Test
+    void generateAutoPlaylistNameClashesWithManualPlaylistThrows() {
+        playlistService.createPlaylist("I miei Preferiti");
+        // Anche un nome già usato da una playlist creata manualmente è un duplicato
+        assertThrows(IllegalArgumentException.class,
+                () -> playlistService.generateAutoPlaylist("I miei Preferiti", List.of(validTrack())));
+    }
+
+    // US-16: generazione per tag (tag impostati a livello di modello, indipendente dalla UI)
+
+    @Test
+    void generateByTagFlow_createsPlaylistWithTaggedTracksOnly() {
+        Library lib = new Library();
+        LibraryService libraryService = new LibraryService(lib, null);
+        PlaylistService service = new PlaylistService(lib, null);
+
+        Track fav   = new Track("Fav",   "x", 100, "Rock", 2000);
+        Track other = new Track("Other", "x", 100, "Pop",  2001);
+        libraryService.addTrack(fav);
+        libraryService.addTrack(other);
+        libraryService.addTag(fav, Tag.FAVOURITE);
+
+        Playlist pl = service.generateAutoPlaylist("I miei Preferiti", libraryService.findByTag(Tag.FAVOURITE));
+
+        assertEquals("I miei Preferiti", pl.getName());
+        assertEquals(1, pl.getTracks().size());
+        assertTrue(pl.getTracks().contains(fav));
+        assertFalse(pl.getTracks().contains(other));
     }
 }
