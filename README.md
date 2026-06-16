@@ -60,7 +60,7 @@ Il progetto adotta un'architettura **MVC + Service Layer**, con separazione nett
 
 ```
 Gruppo2-SAD/
-├── docs/                       ← Documenti (pre-game, sprint1, sprint2)
+├── docs/                       ← Documenti (pre-game, sprint1, sprint2, sprint3)
 ├── src/
 │   ├── main/
 │   │   ├── java/com/gruppo2/musicplaylistmanager/
