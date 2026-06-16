@@ -7,11 +7,15 @@ import com.gruppo2.musicplaylistmanager.service.PlaylistService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
+
 
 /**
  * Test per {@link AddTrackToPlaylistCommand}, {@link RemoveTrackFromPlaylistCommand},
- * {@link CreatePlaylistCommand}, {@link DeletePlaylistCommand}
+ * {@link CreatePlaylistCommand}, {@link DeletePlaylistCommand},
+ * {@link GenerateAutoPlaylistCommand}
  * e {@link CommandHistory}: sia {@code execute()} / {@code push()} (Sprint 1)
  * sia {@code undo()} (US-12).
  */
@@ -341,5 +345,85 @@ class PlaylistCommandTest {
         history.undo();
 
         assertEquals(originalFirst, p.getTracks().get(0));
+    }
+
+    // ===== GenerateAutoPlaylistCommand — execute() =====
+
+    @Test
+    void generateAutoPlaylistCommand_execute_addsPlaylistToLibrary() {
+        Command cmd = new GenerateAutoPlaylistCommand(playlistService, null, "Auto", List.of(track));
+        cmd.execute();
+        assertTrue(playlistService.getAllPlaylists().stream()
+                .anyMatch(p -> p.getName().equals("Auto")));
+    }
+
+    @Test
+    void generateAutoPlaylistCommand_execute_playlistContainsAllTracks() {
+        Track t2 = new Track("T2", "Author2", 120, "Rock", 2002);
+        Command cmd = new GenerateAutoPlaylistCommand(playlistService, null, "Auto", List.of(track, t2));
+        cmd.execute();
+        Playlist created = playlistService.getAllPlaylists().stream()
+                .filter(p -> p.getName().equals("Auto")).findFirst().orElseThrow();
+        assertEquals(2, created.getTracks().size());
+    }
+
+    @Test
+    void generateAutoPlaylistCommand_execute_throwsWhenTracksEmpty() {
+        Command cmd = new GenerateAutoPlaylistCommand(playlistService, null, "Auto", List.of());
+        assertThrows(IllegalArgumentException.class, cmd::execute);
+    }
+
+    @Test
+    void generateAutoPlaylistCommand_execute_throwsOnDuplicateName() {
+        // "Test" è già presente nella libreria (creato nel setUp)
+        Command cmd = new GenerateAutoPlaylistCommand(playlistService, null, "Test", List.of(track));
+        assertThrows(IllegalArgumentException.class, cmd::execute);
+    }
+
+    @Test
+    void generateAutoPlaylistCommand_execute_emptyThrowsDoesNotAddPlaylist() {
+        int before = playlistService.getAllPlaylists().size();
+        Command cmd = new GenerateAutoPlaylistCommand(playlistService, null, "Auto", List.of());
+        assertThrows(IllegalArgumentException.class, cmd::execute);
+        assertEquals(before, playlistService.getAllPlaylists().size());
+    }
+
+    // ===== GenerateAutoPlaylistCommand — undo() =====
+
+    @Test
+    void generateAutoPlaylistCommand_undo_removesPlaylistFromLibrary() {
+        Command cmd = new GenerateAutoPlaylistCommand(playlistService, null, "Auto", List.of(track));
+        cmd.execute();
+        cmd.undo();
+        assertFalse(playlistService.getAllPlaylists().stream()
+                .anyMatch(p -> p.getName().equals("Auto")));
+    }
+
+    @Test
+    void generateAutoPlaylistCommand_undo_libraryHasOriginalSize() {
+        int before = playlistService.getAllPlaylists().size();
+        Command cmd = new GenerateAutoPlaylistCommand(playlistService, null, "Auto", List.of(track));
+        cmd.execute();
+        cmd.undo();
+        assertEquals(before, playlistService.getAllPlaylists().size());
+    }
+
+    @Test
+    void generateAutoPlaylistCommand_undoViaHistory_removesPlaylist() {
+        CommandHistory history = new CommandHistory();
+        history.push(new GenerateAutoPlaylistCommand(playlistService, null, "Auto", List.of(track)));
+        history.undo();
+        assertFalse(playlistService.getAllPlaylists().stream()
+                .anyMatch(p -> p.getName().equals("Auto")));
+    }
+
+    @Test
+    void generateAutoPlaylistCommand_undoViaHistory_allowsRecreationWithSameName() {
+        CommandHistory history = new CommandHistory();
+        history.push(new GenerateAutoPlaylistCommand(playlistService, null, "Auto", List.of(track)));
+        history.undo();
+        // dopo l'undo il nome "Auto" è libero: una nuova generazione non solleva eccezione
+        assertDoesNotThrow(() ->
+                history.push(new GenerateAutoPlaylistCommand(playlistService, null, "Auto", List.of(track))));
     }
 }

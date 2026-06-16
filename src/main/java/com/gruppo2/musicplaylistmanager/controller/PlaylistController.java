@@ -4,6 +4,7 @@ import com.gruppo2.musicplaylistmanager.command.AddTrackToPlaylistCommand;
 import com.gruppo2.musicplaylistmanager.command.CommandHistory;
 import com.gruppo2.musicplaylistmanager.command.CreatePlaylistCommand;
 import com.gruppo2.musicplaylistmanager.command.DeletePlaylistCommand;
+import com.gruppo2.musicplaylistmanager.command.GenerateAutoPlaylistCommand;
 import com.gruppo2.musicplaylistmanager.command.MoveTrackCommand;
 import com.gruppo2.musicplaylistmanager.command.RemoveTrackFromPlaylistCommand;
 import com.gruppo2.musicplaylistmanager.model.Playlist;
@@ -343,7 +344,7 @@ public class PlaylistController {
      */
     private void generate(String name, List<Track> tracks) {
         try {
-            playlistService.generateAutoPlaylist(name, tracks);
+            commandHistory.push(new GenerateAutoPlaylistCommand(playlistService, playbackService, name, tracks));
         } catch (IllegalArgumentException ex) {
             showError(ex.getMessage());
         }

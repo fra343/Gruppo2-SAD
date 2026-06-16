@@ -111,4 +111,4 @@ mvn javadoc:javadoc
 - Riproduzione simulata: **sequenziale**, **shuffle**, **loop**
 - Modifica playlist in tempo reale (anche durante la riproduzione)
 - Evidenziazione in tempo reale della traccia in riproduzione (libreria e playlist)
-- Operazioni **undo** su aggiunta/rimozione tracce e playlist
+- Operazioni **undo** su aggiunta/rimozione tracce, playlist e generazione automatica di playlist
